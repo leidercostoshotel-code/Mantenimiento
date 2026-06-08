@@ -1,486 +1,459 @@
-html
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cotizador Pro</title>
+<title>Cotizador Pro | Compras inteligentes</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
+:root{
+--azul:#0b1f44;
+--azul-claro:#2563eb;
+--celeste:#38bdf8;
+--verde:#10b981;
+--naranja:#f59e0b;
+--rojo:#ef4444;
+--gris:#64748b;
+--borde:rgba(148,163,184,.24);
+--fondo:#f8fafc;
+--card:rgba(255,255,255,.86);
+--sombra:0 24px 60px rgba(15,23,42,.12);
+}
+
+*{box-sizing:border-box}
 
 body{
-background:#f5f7fa;
+min-height:100vh;
+margin:0;
+font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+color:#0f172a;
+background:
+radial-gradient(circle at top left,rgba(37,99,235,.20),transparent 34rem),
+radial-gradient(circle at top right,rgba(56,189,248,.18),transparent 30rem),
+var(--fondo);
 }
+
+.app-shell{display:flex;min-height:100vh}
 
 .sidebar{
-height:100vh;
-background:#003B70;
-color:white;
 position:fixed;
-width:240px;
-padding:20px;
+inset:0 auto 0 0;
+width:290px;
+padding:26px 20px;
+color:white;
+background:linear-gradient(165deg,#06142e 0%,#0b1f44 48%,#123c76 100%);
+box-shadow:12px 0 42px rgba(2,6,23,.22);
+z-index:10;
+overflow-y:auto;
 }
 
-.sidebar h3{
-margin-bottom:30px;
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:30px}
+.brand-icon{
+width:48px;height:48px;border-radius:16px;display:grid;place-items:center;
+background:linear-gradient(135deg,var(--celeste),var(--azul-claro));
+box-shadow:0 16px 30px rgba(56,189,248,.28);
+font-size:25px;
 }
+.brand h1{font-size:21px;font-weight:800;margin:0;letter-spacing:-.04em}
+.brand span{display:block;color:#bae6fd;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.12em}
 
-.sidebar button{
-width:100%;
-margin-bottom:10px;
+.nav-label{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#93c5fd;margin:22px 10px 10px}
+.nav-button{
+width:100%;border:0;border-radius:16px;padding:13px 14px;margin-bottom:9px;
+background:rgba(255,255,255,.08);color:#dbeafe;text-align:left;font-weight:700;
+display:flex;align-items:center;gap:10px;transition:.22s ease;
 }
+.nav-button:hover,.nav-button.active{background:white;color:#0b1f44;transform:translateX(4px)}
+.nav-button.export{background:linear-gradient(135deg,var(--verde),#22c55e);color:white;justify-content:center;margin-top:18px}
+.nav-button.export:hover{color:white;transform:translateY(-2px);box-shadow:0 14px 30px rgba(16,185,129,.28)}
 
-.content{
-margin-left:260px;
-padding:20px;
+.sidebar-card{margin-top:24px;border:1px solid rgba(255,255,255,.13);border-radius:22px;padding:18px;background:rgba(255,255,255,.08);backdrop-filter:blur(14px)}
+.sidebar-card strong{display:block;margin-bottom:6px}.sidebar-card p{margin:0;color:#bfdbfe;font-size:13px;line-height:1.45}
+
+.content{width:100%;margin-left:290px;padding:32px;}
+.hero{
+border:1px solid var(--borde);border-radius:30px;padding:28px;margin-bottom:24px;
+background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,246,255,.88));box-shadow:var(--sombra);
+display:flex;justify-content:space-between;gap:22px;align-items:center;overflow:hidden;position:relative;
 }
+.hero::after{content:"";position:absolute;right:-70px;top:-90px;width:240px;height:240px;border-radius:999px;background:linear-gradient(135deg,rgba(37,99,235,.18),rgba(56,189,248,.08))}
+.hero h2{font-size:34px;font-weight:800;letter-spacing:-.05em;margin:0 0 8px}.hero p{color:var(--gris);margin:0;max-width:650px}.hero-actions{display:flex;gap:12px;z-index:1;flex-wrap:wrap}
 
-.card-kpi{
-border:none;
-border-radius:15px;
-box-shadow:0 2px 10px rgba(0,0,0,.1);
-}
+.section{animation:fade .22s ease}.hidden{display:none}@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card-glass{border:1px solid var(--borde);border-radius:24px;background:var(--card);box-shadow:0 18px 48px rgba(15,23,42,.08);backdrop-filter:blur(18px)}
+.card-kpi{position:relative;overflow:hidden;border:0;border-radius:24px;padding:22px;background:white;box-shadow:0 16px 40px rgba(15,23,42,.08)}
+.card-kpi::before{content:"";position:absolute;inset:0 0 auto;height:5px;background:linear-gradient(90deg,var(--azul-claro),var(--celeste))}
+.kpi-label{color:var(--gris);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.07em}.valor{font-size:32px;font-weight:800;letter-spacing:-.04em;margin-top:8px}.kpi-meta{font-size:13px;color:#64748b;margin-top:6px}
+.section-title{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}.section-title h3{font-size:26px;font-weight:800;letter-spacing:-.04em;margin:0}.section-title p{margin:4px 0 0;color:var(--gris)}
+.form-control,.form-select{border-radius:14px;border:1px solid #dbe3ef;padding:12px 14px}.form-control:focus,.form-select:focus{border-color:var(--azul-claro);box-shadow:0 0 0 .22rem rgba(37,99,235,.13)}
+.btn{border-radius:14px;font-weight:800;padding:11px 16px}.btn-primary{background:linear-gradient(135deg,var(--azul-claro),#1d4ed8);border:0}.btn-success{background:linear-gradient(135deg,var(--verde),#059669);border:0}.btn-outline-primary{border-color:#bfdbfe;color:#1d4ed8}.btn-outline-primary:hover{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
+.table-card{overflow:hidden}.table{margin:0}.table thead th{background:#f8fafc;color:#475569;border-bottom:1px solid #e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.table td{vertical-align:middle;color:#334155}.badge-status{border-radius:999px;padding:7px 10px;font-weight:800}.badge-pendiente{background:#fef3c7;color:#92400e}.badge-aprobado{background:#dcfce7;color:#166534}.badge-rechazado{background:#fee2e2;color:#991b1b}
+.empty-state{border:1px dashed #cbd5e1;border-radius:22px;padding:32px;text-align:center;color:#64748b;background:#f8fafc}.empty-state span{font-size:34px;display:block;margin-bottom:10px}.supplier-item{display:flex;justify-content:space-between;align-items:center;gap:12px}.supplier-pill{font-size:12px;color:#1d4ed8;background:#eff6ff;border-radius:999px;padding:5px 9px;font-weight:800}.toast-lite{position:fixed;right:24px;bottom:24px;z-index:1000;background:#0f172a;color:white;border-radius:18px;padding:14px 18px;box-shadow:0 18px 40px rgba(15,23,42,.28);opacity:0;transform:translateY(12px);pointer-events:none;transition:.22s ease}.toast-lite.show{opacity:1;transform:none}
+.progress-wrap{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}.progress-wrap div{height:100%;background:linear-gradient(90deg,var(--verde),var(--celeste));border-radius:999px;transition:width .25s ease}
 
-.valor{
-font-size:28px;
-font-weight:bold;
-}
-
-.hidden{
-display:none;
-}
-
-.ganador{
-background:#d4edda !important;
-font-weight:bold;
-}
-
+@media (max-width: 992px){.app-shell{display:block}.sidebar{position:relative;width:100%;height:auto;border-radius:0 0 28px 28px}.content{margin-left:0;padding:22px}.hero{align-items:flex-start;flex-direction:column}.hero h2{font-size:28px}}
 </style>
 
 </head>
-
 <body>
-
-<div class="sidebar">
-
-<h3>📊 Cotizador Pro</h3>
-
-<button class="btn btn-light" onclick="mostrar('dashboard')">Dashboard</button>
-
-<button class="btn btn-light" onclick="mostrar('cotizaciones')">Cotizaciones</button>
-
-<button class="btn btn-light" onclick="mostrar('proveedores')">Proveedores</button>
-
-<button class="btn btn-light" onclick="mostrar('aprobaciones')">Aprobaciones</button>
-
-<button class="btn btn-success" onclick="exportarExcel()">Exportar Excel</button>
-
+<div class="app-shell">
+<aside class="sidebar">
+<div class="brand">
+<div class="brand-icon">⚡</div>
+<div>
+<span>Procurement suite</span>
+<h1>Cotizador Pro</h1>
+</div>
 </div>
 
-<div class="content">
+<div class="nav-label">Módulos</div>
+<button class="nav-button active" data-target="dashboard" onclick="mostrar('dashboard')">📈 Dashboard ejecutivo</button>
+<button class="nav-button" data-target="cotizaciones" onclick="mostrar('cotizaciones')">🧾 Cotizaciones</button>
+<button class="nav-button" data-target="proveedores" onclick="mostrar('proveedores')">🤝 Proveedores</button>
+<button class="nav-button" data-target="aprobaciones" onclick="mostrar('aprobaciones')">✅ Aprobaciones</button>
+<button class="nav-button export" onclick="exportarExcel()">Exportar CSV</button>
 
-<!-- DASHBOARD -->
+<div class="sidebar-card">
+<strong>Control en tiempo real</strong>
+<p>Centraliza proveedores, montos y aprobaciones para tomar decisiones de compra más rápidas y auditables.</p>
+</div>
+</aside>
 
-<div id="dashboard">
+<main class="content">
+<section class="hero">
+<div>
+<h2>Compras más claras, rápidas y profesionales.</h2>
+<p>Gestiona solicitudes, compara proveedores y aprueba cotizaciones con una experiencia visual moderna pensada para equipos de alto rendimiento.</p>
+</div>
+<div class="hero-actions">
+<button class="btn btn-primary" onclick="mostrar('cotizaciones')">Nueva cotización</button>
+<button class="btn btn-outline-primary" onclick="mostrar('proveedores')">Agregar proveedor</button>
+</div>
+</section>
 
+<section id="dashboard" class="section">
+<div class="row g-3 mb-4">
+<div class="col-md-6 col-xl-3"><div class="card-kpi"><div class="kpi-label">Total cotizaciones</div><div class="valor" id="kpiCot">0</div><div class="kpi-meta">Registros creados</div></div></div>
+<div class="col-md-6 col-xl-3"><div class="card-kpi"><div class="kpi-label">Total comprado</div><div class="valor" id="kpiMonto">S/0</div><div class="kpi-meta">Solo aprobadas</div></div></div>
+<div class="col-md-6 col-xl-3"><div class="card-kpi"><div class="kpi-label">Aprobadas</div><div class="valor" id="kpiAprobadas">0</div><div class="kpi-meta" id="kpiTasa">0% de conversión</div></div></div>
+<div class="col-md-6 col-xl-3"><div class="card-kpi"><div class="kpi-label">Proveedores</div><div class="valor" id="kpiProv">0</div><div class="kpi-meta">Aliados disponibles</div></div></div>
+</div>
+
+<div class="row g-4">
+<div class="col-lg-7">
+<div class="card-glass p-4 h-100">
+<div class="section-title"><div><h3>Pipeline de aprobaciones</h3><p>Visibilidad del estado operativo.</p></div></div>
+<div class="row g-3" id="estadoResumen"></div>
+</div>
+</div>
+<div class="col-lg-5">
+<div class="card-glass p-4 h-100">
+<div class="section-title"><div><h3>Últimas cotizaciones</h3><p>Actividad reciente.</p></div></div>
+<div id="ultimasCotizaciones"></div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="cotizaciones" class="section hidden">
+<div class="section-title"><div><h3>Nueva cotización</h3><p>Registra una solicitud con proveedor, cantidad y precio unitario.</p></div></div>
+<div class="card-glass p-4 mb-4">
 <div class="row g-3">
-
-<div class="col-md-3">
-<div class="card card-kpi p-3">
-<h6>Total Cotizaciones</h6>
-<div class="valor" id="kpiCot">0</div>
+<div class="col-md-2"><label class="form-label fw-bold">RQ</label><input id="rq" class="form-control" placeholder="RQ-001"></div>
+<div class="col-md-4"><label class="form-label fw-bold">Descripción</label><input id="descripcion" class="form-control" placeholder="Servicio o producto"></div>
+<div class="col-md-2"><label class="form-label fw-bold">Cantidad</label><input id="cantidad" type="number" min="1" class="form-control" placeholder="1"></div>
+<div class="col-md-2"><label class="form-label fw-bold">Proveedor</label><select id="proveedor" class="form-select"></select></div>
+<div class="col-md-2"><label class="form-label fw-bold">Precio unitario</label><input id="precio" type="number" min="0" step="0.01" class="form-control" placeholder="0.00"></div>
+<div class="col-12 d-flex justify-content-end"><button class="btn btn-primary" onclick="guardarCotizacion()">Guardar cotización</button></div>
 </div>
 </div>
 
-<div class="col-md-3">
-<div class="card card-kpi p-3">
-<h6>Total Comprado</h6>
-<div class="valor" id="kpiMonto">S/0</div>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card card-kpi p-3">
-<h6>Aprobadas</h6>
-<div class="valor" id="kpiAprobadas">0</div>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card card-kpi p-3">
-<h6>Proveedores</h6>
-<div class="valor" id="kpiProv">0</div>
-</div>
-</div>
-
-</div>
-
-</div>
-
-<!-- COTIZACIONES -->
-
-<div id="cotizaciones" class="hidden">
-
-<h3>Nueva Cotización</h3>
-
-<div class="row">
-
-<div class="col-md-2">
-<input id="rq" class="form-control" placeholder="RQ">
-</div>
-
-<div class="col-md-4">
-<input id="descripcion" class="form-control" placeholder="Descripción">
-</div>
-
-<div class="col-md-1">
-<input id="cantidad" type="number" class="form-control" placeholder="Cant">
-</div>
-
-<div class="col-md-2">
-<select id="proveedor" class="form-control"></select>
-</div>
-
-<div class="col-md-2">
-<input id="precio" type="number" class="form-control" placeholder="Precio">
-</div>
-
-<div class="col-md-1">
-<button class="btn btn-primary" onclick="guardarCotizacion()">+</button>
-</div>
-
-</div>
-
-<hr>
-
-<table class="table table-striped">
-
-<thead>
-
-<tr>
-<th>ID</th>
-<th>RQ</th>
-<th>Descripción</th>
-<th>Proveedor</th>
-<th>Cantidad</th>
-<th>Precio</th>
-<th>Total</th>
-<th>Estado</th>
-</tr>
-
-</thead>
-
+<div class="card-glass table-card">
+<table class="table table-hover">
+<thead><tr><th>ID</th><th>RQ</th><th>Descripción</th><th>Proveedor</th><th>Cant.</th><th>Precio</th><th>Total</th><th>Estado</th><th></th></tr></thead>
 <tbody id="tablaCot"></tbody>
-
 </table>
-
 </div>
+</section>
 
-<!-- PROVEEDORES -->
-
-<div id="proveedores" class="hidden">
-
-<h3>Proveedores</h3>
-
-<div class="row">
-
-<div class="col-md-4">
-<input id="nuevoProveedor" class="form-control" placeholder="Proveedor">
+<section id="proveedores" class="section hidden">
+<div class="section-title"><div><h3>Proveedores</h3><p>Mantén tu base de aliados limpia y lista para cotizar.</p></div></div>
+<div class="card-glass p-4 mb-4">
+<div class="row g-3 align-items-end">
+<div class="col-md-8"><label class="form-label fw-bold">Nuevo proveedor</label><input id="nuevoProveedor" class="form-control" placeholder="Nombre comercial"></div>
+<div class="col-md-4"><button class="btn btn-success w-100" onclick="guardarProveedor()">Agregar proveedor</button></div>
 </div>
-
-<div class="col-md-2">
-<button class="btn btn-success" onclick="guardarProveedor()">
-Agregar
-</button>
 </div>
+<ul id="listaProveedores" class="list-group card-glass p-2"></ul>
+</section>
 
-</div>
-
-<hr>
-
-<ul id="listaProveedores" class="list-group"></ul>
-
-</div>
-
-<!-- APROBACIONES -->
-
-<div id="aprobaciones" class="hidden">
-
-<h3>Aprobaciones</h3>
-
-<table class="table">
-
-<thead>
-
-<tr>
-<th>ID</th>
-<th>Descripción</th>
-<th>Total</th>
-<th>Estado</th>
-<th>Acción</th>
-</tr>
-
-</thead>
-
+<section id="aprobaciones" class="section hidden">
+<div class="section-title"><div><h3>Aprobaciones</h3><p>Aprueba o rechaza solicitudes pendientes con trazabilidad inmediata.</p></div></div>
+<div class="card-glass table-card">
+<table class="table table-hover">
+<thead><tr><th>ID</th><th>Descripción</th><th>Total</th><th>Estado</th><th>Acción</th></tr></thead>
 <tbody id="tablaAprobaciones"></tbody>
-
 </table>
-
+</div>
+</section>
+</main>
 </div>
 
-</div>
+<div id="toast" class="toast-lite"></div>
 
 <script>
+const STORAGE_KEYS = {
+proveedores: "proveedores",
+cotizaciones: "cotizaciones"
+};
 
-let proveedores =
-JSON.parse(localStorage.getItem("proveedores")) || [];
+let proveedores = JSON.parse(localStorage.getItem(STORAGE_KEYS.proveedores)) || ["Proveedor estratégico", "Servicios Andinos", "Suministros Lima"];
+let cotizaciones = JSON.parse(localStorage.getItem(STORAGE_KEYS.cotizaciones)) || [];
 
-let cotizaciones =
-JSON.parse(localStorage.getItem("cotizaciones")) || [];
+const formatCurrency = value => `S/${Number(value || 0).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const sanitize = value => String(value || "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[char]));
+const csvValue = value => `"${String(value ?? "").replaceAll("\"", "\"\"")}"`;
 
 function mostrar(id){
+["dashboard", "cotizaciones", "proveedores", "aprobaciones"].forEach(sectionId => {
+const section = document.getElementById(sectionId);
+const button = document.querySelector(`[data-target="${sectionId}"]`);
+section.classList.toggle("hidden", sectionId !== id);
+button?.classList.toggle("active", sectionId === id);
+});
+window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
-["dashboard","cotizaciones","proveedores","aprobaciones"]
-.forEach(x=>document.getElementById(x).classList.add("hidden"));
-
-document.getElementById(id).classList.remove("hidden");
-
+function notify(message){
+const toast = document.getElementById("toast");
+toast.textContent = message;
+toast.classList.add("show");
+setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
 function guardarProveedor(){
-
-let nombre =
-document.getElementById("nuevoProveedor").value;
-
-if(!nombre) return;
-
+const input = document.getElementById("nuevoProveedor");
+const nombre = input.value.trim();
+if(!nombre) return notify("Ingresa el nombre del proveedor.");
+if(proveedores.some(p => p.toLowerCase() === nombre.toLowerCase())) return notify("Ese proveedor ya existe.");
 proveedores.push(nombre);
-
-localStorage.setItem(
-"proveedores",
-JSON.stringify(proveedores)
-);
-
+localStorage.setItem(STORAGE_KEYS.proveedores, JSON.stringify(proveedores));
+input.value = "";
 renderProveedores();
+notify("Proveedor agregado correctamente.");
+}
 
+function eliminarProveedor(index){
+const proveedor = proveedores[index];
+const tieneCotizaciones = cotizaciones.some(c => c.proveedor === proveedor);
+if(tieneCotizaciones) return notify("No puedes eliminar un proveedor con cotizaciones asociadas.");
+proveedores.splice(index, 1);
+localStorage.setItem(STORAGE_KEYS.proveedores, JSON.stringify(proveedores));
+renderProveedores();
+notify("Proveedor eliminado.");
 }
 
 function renderProveedores(){
+const lista = document.getElementById("listaProveedores");
+const combo = document.getElementById("proveedor");
+lista.innerHTML = "";
+combo.innerHTML = "";
 
-let lista =
-document.getElementById("listaProveedores");
+if(!proveedores.length){
+lista.innerHTML = `<li class="list-group-item border-0"><div class="empty-state"><span>🤝</span>Agrega tu primer proveedor para empezar a cotizar.</div></li>`;
+combo.innerHTML = `<option value="">Sin proveedores</option>`;
+actualizarKPIs();
+return;
+}
 
-let combo =
-document.getElementById("proveedor");
-
-lista.innerHTML="";
-combo.innerHTML="";
-
-proveedores.forEach(p=>{
-
-lista.innerHTML +=
-`<li class="list-group-item">${p}</li>`;
-
-combo.innerHTML +=
-`<option>${p}</option>`;
-
+proveedores.forEach((p, index) => {
+lista.innerHTML += `<li class="list-group-item border-0 supplier-item"><div><strong>${sanitize(p)}</strong><div class="text-secondary small">Disponible para nuevas solicitudes</div></div><div class="d-flex align-items-center gap-2"><span class="supplier-pill">Activo</span><button class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${index})">Eliminar</button></div></li>`;
+combo.innerHTML += `<option value="${sanitize(p)}">${sanitize(p)}</option>`;
 });
-
-atualizarKPIs();
-
+actualizarKPIs();
 }
 
 function guardarCotizacion(){
+const rqInput = document.getElementById("rq");
+const descripcionInput = document.getElementById("descripcion");
+const cantidadInput = document.getElementById("cantidad");
+const proveedorInput = document.getElementById("proveedor");
+const precioInput = document.getElementById("precio");
+const cantidadValor = Number(cantidadInput.value);
+const precioValor = Number(precioInput.value);
 
-let cot = {
+if(!proveedores.length) return notify("Agrega al menos un proveedor antes de cotizar.");
+if(!rqInput.value.trim() || !descripcionInput.value.trim()) return notify("Completa RQ y descripción.");
+if(cantidadValor <= 0 || precioValor <= 0) return notify("Cantidad y precio deben ser mayores a cero.");
 
+const cot = {
 id: Date.now(),
-
-rq: rq.value,
-
-descripcion: descripcion.value,
-
-cantidad: Number(cantidad.value),
-
-proveedor: proveedor.value,
-
-precio: Number(precio.value),
-
-estado:"Pendiente"
-
+rq: rqInput.value.trim(),
+descripcion: descripcionInput.value.trim(),
+cantidad: cantidadValor,
+proveedor: proveedorInput.value,
+precio: precioValor,
+estado: "Pendiente"
 };
 
 cot.total = cot.cantidad * cot.precio;
-
-cotizaciones.push(cot);
-
-localStorage.setItem(
-"cotizaciones",
-JSON.stringify(cotizaciones)
-);
-
-renderCotizaciones();
-
+cotizaciones.unshift(cot);
+guardar();
+[rqInput, descripcionInput, cantidadInput, precioInput].forEach(input => input.value = "");
+notify("Cotización registrada.");
 }
 
 function renderCotizaciones(){
+const tabla = document.getElementById("tablaCot");
+tabla.innerHTML = "";
 
-let tabla =
-document.getElementById("tablaCot");
-
-tabla.innerHTML="";
-
-cotizaciones.forEach(c=>{
-
-tabla.innerHTML += `
-
-<tr>
-
-<td>${c.id}</td>
-<td>${c.rq}</td>
-<td>${c.descripcion}</td>
-<td>${c.proveedor}</td>
-<td>${c.cantidad}</td>
-<td>S/${c.precio}</td>
-<td>S/${c.total}</td>
-<td>${c.estado}</td>
-
-</tr>
-
-`;
-
-});
-
+if(!cotizaciones.length){
+tabla.innerHTML = `<tr><td colspan="9"><div class="empty-state"><span>🧾</span>Aún no hay cotizaciones registradas.</div></td></tr>`;
 renderAprobaciones();
-atualizarKPIs();
+actualizarKPIs();
+return;
+}
 
+cotizaciones.forEach(c => {
+tabla.innerHTML += `
+<tr>
+<td><strong>#${c.id}</strong></td>
+<td>${sanitize(c.rq)}</td>
+<td>${sanitize(c.descripcion)}</td>
+<td>${sanitize(c.proveedor)}</td>
+<td>${c.cantidad}</td>
+<td>${formatCurrency(c.precio)}</td>
+<td><strong>${formatCurrency(c.total)}</strong></td>
+<td>${statusBadge(c.estado)}</td>
+<td><button class="btn btn-sm btn-outline-danger" onclick="eliminarCotizacion(${c.id})">Eliminar</button></td>
+</tr>`;
+});
+renderAprobaciones();
+actualizarKPIs();
 }
 
 function renderAprobaciones(){
+const tabla = document.getElementById("tablaAprobaciones");
+tabla.innerHTML = "";
+const pendientes = cotizaciones.filter(c => c.estado === "Pendiente");
 
-let tabla =
-document.getElementById("tablaAprobaciones");
+if(!pendientes.length){
+tabla.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span>✅</span>No tienes aprobaciones pendientes.</div></td></tr>`;
+return;
+}
 
-tabla.innerHTML="";
-
-cotizaciones.forEach(c=>{
-
+pendientes.forEach(c => {
 tabla.innerHTML += `
-
 <tr>
-
-<td>${c.id}</td>
-<td>${c.descripcion}</td>
-<td>S/${c.total}</td>
-<td>${c.estado}</td>
-
-<td>
-
-<button
-class="btn btn-success btn-sm"
-onclick="aprobar(${c.id})">
-
-Aprobar
-
-</button>
-
-<button
-class="btn btn-danger btn-sm"
-onclick="rechazar(${c.id})">
-
-Rechazar
-
-</button>
-
-</td>
-
-</tr>
-
-`;
-
+<td><strong>#${c.id}</strong></td>
+<td>${sanitize(c.descripcion)}</td>
+<td><strong>${formatCurrency(c.total)}</strong></td>
+<td>${statusBadge(c.estado)}</td>
+<td class="d-flex gap-2 flex-wrap"><button class="btn btn-success btn-sm" onclick="aprobar(${c.id})">Aprobar</button><button class="btn btn-danger btn-sm" onclick="rechazar(${c.id})">Rechazar</button></td>
+</tr>`;
 });
+}
 
+function statusBadge(estado){
+const className = estado === "Aprobado" ? "badge-aprobado" : estado === "Rechazado" ? "badge-rechazado" : "badge-pendiente";
+return `<span class="badge-status ${className}">${estado}</span>`;
 }
 
 function aprobar(id){
-
-let c = cotizaciones.find(x=>x.id==id);
-
-c.estado="Aprobado";
-
+const cotizacion = cotizaciones.find(x => x.id === id);
+if(!cotizacion) return;
+cotizacion.estado = "Aprobado";
 guardar();
-
+notify("Cotización aprobada.");
 }
 
 function rechazar(id){
-
-let c = cotizaciones.find(x=>x.id==id);
-
-c.estado="Rechazado";
-
+const cotizacion = cotizaciones.find(x => x.id === id);
+if(!cotizacion) return;
+cotizacion.estado = "Rechazado";
 guardar();
+notify("Cotización rechazada.");
+}
 
+function eliminarCotizacion(id){
+cotizaciones = cotizaciones.filter(c => c.id !== id);
+guardar();
+notify("Cotización eliminada.");
 }
 
 function guardar(){
-
-localStorage.setItem(
-"cotizaciones",
-JSON.stringify(cotizaciones)
-);
-
+localStorage.setItem(STORAGE_KEYS.cotizaciones, JSON.stringify(cotizaciones));
+localStorage.setItem(STORAGE_KEYS.proveedores, JSON.stringify(proveedores));
 renderCotizaciones();
-
 }
 
-function atualizarKPIs(){
+function actualizarKPIs(){
+const aprobadas = cotizaciones.filter(x => x.estado === "Aprobado");
+const pendientes = cotizaciones.filter(x => x.estado === "Pendiente").length;
+const rechazadas = cotizaciones.filter(x => x.estado === "Rechazado").length;
+const totalAprobado = aprobadas.reduce((a, b) => a + b.total, 0);
+const tasa = cotizaciones.length ? Math.round((aprobadas.length / cotizaciones.length) * 100) : 0;
 
-document.getElementById("kpiCot").innerText =
-cotizaciones.length;
+document.getElementById("kpiCot").innerText = cotizaciones.length;
+document.getElementById("kpiMonto").innerText = formatCurrency(totalAprobado);
+document.getElementById("kpiAprobadas").innerText = aprobadas.length;
+document.getElementById("kpiTasa").innerText = `${tasa}% de conversión`;
+document.getElementById("kpiProv").innerText = proveedores.length;
+renderEstadoResumen(aprobadas.length, pendientes, rechazadas);
+renderUltimasCotizaciones();
+}
 
-let total =
-cotizaciones.reduce((a,b)=>a+b.total,0);
+function renderEstadoResumen(aprobadas, pendientes, rechazadas){
+const total = Math.max(cotizaciones.length, 1);
+const resumen = [
+{ label: "Aprobadas", value: aprobadas, color: "var(--verde)" },
+{ label: "Pendientes", value: pendientes, color: "var(--naranja)" },
+{ label: "Rechazadas", value: rechazadas, color: "var(--rojo)" }
+];
+document.getElementById("estadoResumen").innerHTML = resumen.map(item => `
+<div class="col-md-4">
+<div class="p-3 rounded-4 bg-white border">
+<div class="d-flex justify-content-between mb-2"><strong>${item.label}</strong><span>${item.value}</span></div>
+<div class="progress-wrap"><div style="width:${(item.value / total) * 100}%;background:${item.color}"></div></div>
+</div>
+</div>`).join("");
+}
 
-document.getElementById("kpiMonto").innerText =
-"S/"+total.toFixed(2);
-
-document.getElementById("kpiAprobadas").innerText =
-cotizaciones.filter(x=>x.estado=="Aprobado").length;
-
-document.getElementById("kpiProv").innerText =
-proveedores.length;
-
+function renderUltimasCotizaciones(){
+const contenedor = document.getElementById("ultimasCotizaciones");
+if(!cotizaciones.length){
+contenedor.innerHTML = `<div class="empty-state"><span>✨</span>Registra cotizaciones para ver actividad reciente.</div>`;
+return;
+}
+contenedor.innerHTML = cotizaciones.slice(0, 4).map(c => `
+<div class="d-flex justify-content-between gap-3 py-3 border-bottom">
+<div><strong>${sanitize(c.descripcion)}</strong><div class="text-secondary small">${sanitize(c.proveedor)} · ${sanitize(c.rq)}</div></div>
+<div class="text-end"><strong>${formatCurrency(c.total)}</strong><div>${statusBadge(c.estado)}</div></div>
+</div>`).join("");
 }
 
 function exportarExcel(){
-
-let csv =
-"ID,RQ,Descripcion,Proveedor,Cantidad,Precio,Total,Estado\n";
-
-cotizaciones.forEach(c=>{
-
-csv +=
-`${c.id},${c.rq},${c.descripcion},${c.proveedor},${c.cantidad},${c.precio},${c.total},${c.estado}\n`;
-
+if(!cotizaciones.length) return notify("No hay cotizaciones para exportar.");
+let csv = "ID,RQ,Descripcion,Proveedor,Cantidad,Precio,Total,Estado\n";
+cotizaciones.forEach(c => {
+csv += [c.id, csvValue(c.rq), csvValue(c.descripcion), csvValue(c.proveedor), c.cantidad, c.precio, c.total, csvValue(c.estado)].join(",") + "\n";
 });
-
-let blob = new Blob([csv]);
-
-let a = document.createElement("a");
-
+const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+const a = document.createElement("a");
 a.href = URL.createObjectURL(blob);
-
 a.download = "Cotizaciones.csv";
-
 a.click();
-
+URL.revokeObjectURL(a.href);
+notify("Archivo CSV generado.");
 }
 
 renderProveedores();
 renderCotizaciones();
-
 </script>
-
 </body>
+</html>
