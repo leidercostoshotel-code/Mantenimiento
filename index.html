@@ -93,7 +93,7 @@ display:flex;justify-content:space-between;gap:22px;align-items:center;overflow:
 .form-control,.form-select{border-radius:14px;border:1px solid #dbe3ef;padding:12px 14px}.form-control:focus,.form-select:focus{border-color:var(--azul-claro);box-shadow:0 0 0 .22rem rgba(37,99,235,.13)}
 .btn{border-radius:14px;font-weight:800;padding:11px 16px}.btn-primary{background:linear-gradient(135deg,var(--azul-claro),#1d4ed8);border:0}.btn-success{background:linear-gradient(135deg,var(--verde),#059669);border:0}.btn-outline-primary{border-color:#bfdbfe;color:#1d4ed8}.btn-outline-primary:hover{background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}
 .table-card{overflow:hidden}.table{margin:0}.table thead th{background:#f8fafc;color:#475569;border-bottom:1px solid #e2e8f0;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.table td{vertical-align:middle;color:#334155}.badge-status{border-radius:999px;padding:7px 10px;font-weight:800}.badge-pendiente{background:#fef3c7;color:#92400e}.badge-aprobado{background:#dcfce7;color:#166534}.badge-rechazado{background:#fee2e2;color:#991b1b}
-.empty-state{border:1px dashed #cbd5e1;border-radius:22px;padding:32px;text-align:center;color:#64748b;background:#f8fafc}.empty-state span{font-size:34px;display:block;margin-bottom:10px}.supplier-item{display:flex;justify-content:space-between;align-items:center;gap:12px}.supplier-pill{font-size:12px;color:#1d4ed8;background:#eff6ff;border-radius:999px;padding:5px 9px;font-weight:800}.toast-lite{position:fixed;right:24px;bottom:24px;z-index:1000;background:#0f172a;color:white;border-radius:18px;padding:14px 18px;box-shadow:0 18px 40px rgba(15,23,42,.28);opacity:0;transform:translateY(12px);pointer-events:none;transition:.22s ease}.toast-lite.show{opacity:1;transform:none}
+.empty-state{border:1px dashed #cbd5e1;border-radius:22px;padding:32px;text-align:center;color:#64748b;background:#f8fafc}.empty-state span{font-size:34px;display:block;margin-bottom:10px}.supplier-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.supplier-meta{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:8px;color:#64748b;font-size:12px}.supplier-meta span{display:inline-flex;gap:5px;align-items:center}.supplier-address{color:#475569;font-size:13px;margin-top:7px}.supplier-pill{font-size:12px;color:#1d4ed8;background:#eff6ff;border-radius:999px;padding:5px 9px;font-weight:800}.supplier-pill.ok{color:#166534;background:#dcfce7}.supplier-pill.warning{color:#92400e;background:#fef3c7}.lookup-hint{font-size:12px;color:#64748b;margin-top:8px}.toast-lite{position:fixed;right:24px;bottom:24px;z-index:1000;background:#0f172a;color:white;border-radius:18px;padding:14px 18px;box-shadow:0 18px 40px rgba(15,23,42,.28);opacity:0;transform:translateY(12px);pointer-events:none;transition:.22s ease}.toast-lite.show{opacity:1;transform:none}
 .progress-wrap{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}.progress-wrap div{height:100%;background:linear-gradient(90deg,var(--verde),var(--celeste));border-radius:999px;transition:width .25s ease}
 
 @media (max-width: 992px){.app-shell{display:block}.sidebar{position:relative;width:100%;height:auto;border-radius:0 0 28px 28px}.content{margin-left:0;padding:22px}.hero{align-items:flex-start;flex-direction:column}.hero h2{font-size:28px}}
@@ -185,8 +185,16 @@ display:flex;justify-content:space-between;gap:22px;align-items:center;overflow:
 <div class="section-title"><div><h3>Proveedores</h3><p>Mantén tu base de aliados limpia y lista para cotizar.</p></div></div>
 <div class="card-glass p-4 mb-4">
 <div class="row g-3 align-items-end">
-<div class="col-md-8"><label class="form-label fw-bold">Nuevo proveedor</label><input id="nuevoProveedor" class="form-control" placeholder="Nombre comercial"></div>
-<div class="col-md-4"><button class="btn btn-success w-100" onclick="guardarProveedor()">Agregar proveedor</button></div>
+<div class="col-md-3"><label class="form-label fw-bold">RUC</label><input id="rucProveedor" class="form-control" inputmode="numeric" maxlength="11" placeholder="20100177774" oninput="manejarCambioRuc()"><div id="rucLookupHint" class="lookup-hint">Ingresa 11 dígitos para buscar en SUNAT automáticamente.</div></div>
+<div class="col-md-5"><label class="form-label fw-bold">Razón social / Nombre comercial</label><input id="nuevoProveedor" class="form-control" placeholder="Se autocompleta con el RUC"></div>
+<div class="col-md-4"><label class="form-label fw-bold">Dirección fiscal</label><input id="direccionProveedor" class="form-control" placeholder="Se autocompleta si está disponible"></div>
+<div class="col-md-2"><label class="form-label fw-bold">Estado</label><input id="estadoProveedor" class="form-control" placeholder="Activo"></div>
+<div class="col-md-2"><label class="form-label fw-bold">Condición</label><input id="condicionProveedor" class="form-control" placeholder="Habido"></div>
+<div class="col-md-2"><label class="form-label fw-bold">Distrito</label><input id="distritoProveedor" class="form-control" placeholder="Distrito"></div>
+<div class="col-md-2"><label class="form-label fw-bold">Provincia</label><input id="provinciaProveedor" class="form-control" placeholder="Provincia"></div>
+<div class="col-md-2"><label class="form-label fw-bold">Departamento</label><input id="departamentoProveedor" class="form-control" placeholder="Departamento"></div>
+<div class="col-md-2"><button id="btnBuscarRuc" class="btn btn-outline-primary w-100" type="button" onclick="buscarProveedorPorRuc()">Buscar RUC</button></div>
+<div class="col-12 d-flex justify-content-end"><button class="btn btn-success" onclick="guardarProveedor()">Agregar proveedor</button></div>
 </div>
 </div>
 <ul id="listaProveedores" class="list-group card-glass p-2"></ul>
@@ -212,12 +220,48 @@ proveedores: "proveedores",
 cotizaciones: "cotizaciones"
 };
 
-let proveedores = JSON.parse(localStorage.getItem(STORAGE_KEYS.proveedores)) || ["Proveedor estratégico", "Servicios Andinos", "Suministros Lima"];
-let cotizaciones = JSON.parse(localStorage.getItem(STORAGE_KEYS.cotizaciones)) || [];
+const RUC_API_URL = "https://graphperu.daustinn.com/api/query/";
+const PROVEEDORES_INICIALES = ["Proveedor estratégico", "Servicios Andinos", "Suministros Lima"];
+const generarId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
+let proveedores = normalizarProveedores(JSON.parse(localStorage.getItem(STORAGE_KEYS.proveedores)) || PROVEEDORES_INICIALES);
+let cotizaciones = JSON.parse(localStorage.getItem(STORAGE_KEYS.cotizaciones)) || [];
+let ultimoRucConsultado = "";
+let rucLookupTimer;
 const formatCurrency = value => `S/${Number(value || 0).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const sanitize = value => String(value || "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[char]));
+const sanitize = value => String(value || "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
 const csvValue = value => `"${String(value ?? "").replaceAll("\"", "\"\"")}"`;
+const soloDigitos = value => String(value || "").replace(/\D/g, "");
+
+function normalizarProveedores(lista){
+return lista.map(item => typeof item === "string" ? {
+id: generarId(),
+ruc: "",
+nombre: item,
+direccion: "",
+estado: "",
+condicion: "",
+distrito: "",
+provincia: "",
+departamento: "",
+fuente: "Manual"
+} : {
+id: item.id || generarId(),
+ruc: soloDigitos(item.ruc),
+nombre: item.nombre || item.razonSocial || item.name || "",
+direccion: item.direccion || item.address || "",
+estado: item.estado || item.state || "",
+condicion: item.condicion || item.condition || "",
+distrito: item.distrito || item.district || "",
+provincia: item.provincia || item.province || "",
+departamento: item.departamento || item.region || "",
+fuente: item.fuente || "Manual"
+});
+}
+
+function nombreProveedor(proveedor){
+return typeof proveedor === "string" ? proveedor : proveedor?.nombre || "";
+}
 
 function mostrar(id){
 ["dashboard", "cotizaciones", "proveedores", "aprobaciones"].forEach(sectionId => {
@@ -236,21 +280,123 @@ toast.classList.add("show");
 setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
+function setRucHint(message, type = "info"){
+const hint = document.getElementById("rucLookupHint");
+if(!hint) return;
+hint.textContent = message;
+hint.className = `lookup-hint text-${type === "error" ? "danger" : type === "success" ? "success" : "secondary"}`;
+}
+
+function manejarCambioRuc(){
+const input = document.getElementById("rucProveedor");
+input.value = soloDigitos(input.value).slice(0, 11);
+clearTimeout(rucLookupTimer);
+const ruc = input.value;
+if(ruc.length < 11){
+ultimoRucConsultado = "";
+setRucHint("Ingresa 11 dígitos para buscar en SUNAT automáticamente.");
+return;
+}
+rucLookupTimer = setTimeout(() => buscarProveedorPorRuc(), 550);
+}
+
+function mapearDatosRuc(data){
+const raw = data?.data || data?.business || data?.result || data || {};
+return {
+ruc: soloDigitos(raw.documentID || raw.documentId || raw.ruc || raw.numeroDocumento || raw.numero || raw.id),
+nombre: raw.name || raw.nombre || raw.razonSocial || raw.razon_social || raw.nombre_o_razon_social || "",
+direccion: raw.address || raw.direccion || raw.direccionCompleta || raw.direccion_completa || "",
+estado: raw.state || raw.estado || "",
+condicion: raw.condition || raw.condicion || "",
+distrito: raw.district || raw.distrito || "",
+provincia: raw.province || raw.provincia || "",
+departamento: raw.region || raw.departamento || raw.regionNombre || "",
+fuente: raw.resourceOf || raw.fuente || "SUNAT"
+};
+}
+
+function llenarFormularioProveedor(datos){
+document.getElementById("rucProveedor").value = datos.ruc || document.getElementById("rucProveedor").value;
+document.getElementById("nuevoProveedor").value = datos.nombre || "";
+document.getElementById("direccionProveedor").value = datos.direccion || "";
+document.getElementById("estadoProveedor").value = datos.estado || "";
+document.getElementById("condicionProveedor").value = datos.condicion || "";
+document.getElementById("distritoProveedor").value = datos.distrito || "";
+document.getElementById("provinciaProveedor").value = datos.provincia || "";
+document.getElementById("departamentoProveedor").value = datos.departamento || "";
+}
+
+async function buscarProveedorPorRuc(){
+const rucInput = document.getElementById("rucProveedor");
+const boton = document.getElementById("btnBuscarRuc");
+const ruc = soloDigitos(rucInput.value);
+rucInput.value = ruc;
+if(ruc.length !== 11) return notify("El RUC debe tener 11 dígitos.");
+if(ruc === ultimoRucConsultado && document.getElementById("nuevoProveedor").value.trim()) return;
+
+boton.disabled = true;
+boton.textContent = "Buscando...";
+setRucHint("Consultando datos públicos de SUNAT por internet...");
+
+try{
+const response = await fetch(`${RUC_API_URL}${ruc}`, { headers: { "Accept": "application/json" } });
+if(!response.ok) throw new Error(`HTTP ${response.status}`);
+const data = await response.json();
+const datos = mapearDatosRuc(data);
+if(!datos.nombre) throw new Error("RUC sin razón social en la respuesta");
+llenarFormularioProveedor({ ...datos, ruc });
+ultimoRucConsultado = ruc;
+setRucHint(`Datos cargados automáticamente desde ${datos.fuente || "SUNAT"}.`, "success");
+notify("Datos del proveedor completados automáticamente.");
+}catch(error){
+console.error("No se pudo consultar el RUC", error);
+setRucHint("No se pudo consultar el RUC. Verifica tu conexión o completa los campos manualmente.", "error");
+notify("No se pudo consultar el RUC por internet.");
+}finally{
+boton.disabled = false;
+boton.textContent = "Buscar RUC";
+}
+}
+
 function guardarProveedor(){
-const input = document.getElementById("nuevoProveedor");
-const nombre = input.value.trim();
-if(!nombre) return notify("Ingresa el nombre del proveedor.");
-if(proveedores.some(p => p.toLowerCase() === nombre.toLowerCase())) return notify("Ese proveedor ya existe.");
-proveedores.push(nombre);
+const ruc = soloDigitos(document.getElementById("rucProveedor").value);
+const nombre = document.getElementById("nuevoProveedor").value.trim();
+const direccion = document.getElementById("direccionProveedor").value.trim();
+const estado = document.getElementById("estadoProveedor").value.trim();
+const condicion = document.getElementById("condicionProveedor").value.trim();
+const distrito = document.getElementById("distritoProveedor").value.trim();
+const provincia = document.getElementById("provinciaProveedor").value.trim();
+const departamento = document.getElementById("departamentoProveedor").value.trim();
+
+if(ruc && ruc.length !== 11) return notify("El RUC debe tener 11 dígitos.");
+if(!nombre) return notify("Ingresa la razón social o nombre del proveedor.");
+if(ruc && proveedores.some(p => p.ruc === ruc)) return notify("Ya existe un proveedor con ese RUC.");
+if(proveedores.some(p => nombreProveedor(p).toLowerCase() === nombre.toLowerCase())) return notify("Ese proveedor ya existe.");
+
+proveedores.push({
+id: generarId(),
+ruc,
+nombre,
+direccion,
+estado,
+condicion,
+distrito,
+provincia,
+departamento,
+fuente: ruc ? "SUNAT" : "Manual"
+});
 localStorage.setItem(STORAGE_KEYS.proveedores, JSON.stringify(proveedores));
-input.value = "";
+["rucProveedor", "nuevoProveedor", "direccionProveedor", "estadoProveedor", "condicionProveedor", "distritoProveedor", "provinciaProveedor", "departamentoProveedor"].forEach(id => document.getElementById(id).value = "");
+ultimoRucConsultado = "";
+setRucHint("Ingresa 11 dígitos para buscar en SUNAT automáticamente.");
 renderProveedores();
 notify("Proveedor agregado correctamente.");
 }
 
 function eliminarProveedor(index){
 const proveedor = proveedores[index];
-const tieneCotizaciones = cotizaciones.some(c => c.proveedor === proveedor);
+const nombre = nombreProveedor(proveedor);
+const tieneCotizaciones = cotizaciones.some(c => c.proveedor === nombre);
 if(tieneCotizaciones) return notify("No puedes eliminar un proveedor con cotizaciones asociadas.");
 proveedores.splice(index, 1);
 localStorage.setItem(STORAGE_KEYS.proveedores, JSON.stringify(proveedores));
@@ -272,8 +418,12 @@ return;
 }
 
 proveedores.forEach((p, index) => {
-lista.innerHTML += `<li class="list-group-item border-0 supplier-item"><div><strong>${sanitize(p)}</strong><div class="text-secondary small">Disponible para nuevas solicitudes</div></div><div class="d-flex align-items-center gap-2"><span class="supplier-pill">Activo</span><button class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${index})">Eliminar</button></div></li>`;
-combo.innerHTML += `<option value="${sanitize(p)}">${sanitize(p)}</option>`;
+const nombre = nombreProveedor(p);
+const estadoTexto = p.estado || "Activo";
+const pillClass = estadoTexto.toLowerCase().includes("activo") ? "ok" : "warning";
+const ubicacion = [p.distrito, p.provincia, p.departamento].filter(Boolean).join(" / ");
+lista.innerHTML += `<li class="list-group-item border-0 supplier-item"><div><strong>${sanitize(nombre)}</strong><div class="supplier-meta">${p.ruc ? `<span>🪪 RUC: ${sanitize(p.ruc)}</span>` : ""}${p.condicion ? `<span>🏢 ${sanitize(p.condicion)}</span>` : ""}${ubicacion ? `<span>📍 ${sanitize(ubicacion)}</span>` : ""}${p.fuente ? `<span>🔎 ${sanitize(p.fuente)}</span>` : ""}</div>${p.direccion ? `<div class="supplier-address">${sanitize(p.direccion)}</div>` : `<div class="text-secondary small mt-1">Disponible para nuevas solicitudes</div>`}</div><div class="d-flex align-items-center gap-2"><span class="supplier-pill ${pillClass}">${sanitize(estadoTexto)}</span><button class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${index})">Eliminar</button></div></li>`;
+combo.innerHTML += `<option value="${sanitize(nombre)}">${sanitize(nombre)}${p.ruc ? ` · ${sanitize(p.ruc)}` : ""}</option>`;
 });
 actualizarKPIs();
 }
@@ -452,6 +602,7 @@ URL.revokeObjectURL(a.href);
 notify("Archivo CSV generado.");
 }
 
+localStorage.setItem(STORAGE_KEYS.proveedores, JSON.stringify(proveedores));
 renderProveedores();
 renderCotizaciones();
 </script>
