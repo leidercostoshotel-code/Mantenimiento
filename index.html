@@ -798,7 +798,7 @@ table.dt td strong{color:var(--text-1);font-weight:600}
     <div class="m-body" style="max-height:75vh;overflow-y:auto">
       <div class="section-label">📋 Datos de la solicitud</div>
       <div class="fgrid g2" style="gap:11px">
-        <div class="fg"><label class="fl">Código RQ *</label><input id="rq" class="fi" placeholder="RQ-001" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Código RQ</label><input id="rq" class="fi" readonly style="background:var(--surface-2);color:var(--text-3);cursor:default" placeholder="Auto-generado"></div>
         <div class="fg"><label class="fl">ID Cotización</label><input id="cotId" class="fi" readonly style="background:var(--surface-2);color:var(--text-3);cursor:default" placeholder="Auto-generado"></div>
         <div class="fg span2"><label class="fl">Material / Descripción *</label>
           <div class="mat-ac-wrap">
@@ -1061,6 +1061,11 @@ function nextCotId(){
   const nums=cots.map(c=>parseInt(String(c.id))).filter(n=>n>=10000001&&n<=99999999);
   return String(nums.length?Math.max(...nums)+1:10000001);
 }
+function nextRq(){
+  const nums=cots.map(c=>parseInt((c.rq||"").replace(/\D/g,""))).filter(n=>n>0);
+  const next=nums.length?Math.max(...nums)+1:1;
+  return "RQ-"+String(next).padStart(4,"0");
+}
 function normCots(list){
   return list.map(c=>{
     if(c.ofertas) return c;
@@ -1174,11 +1179,12 @@ document.getElementById("confOk").onclick=()=>{ confCb?.(); cancelConf(); };
 function abrirMC(){
   tempOfertas=[];
   document.getElementById("cotId").value=nextCotId();
+  document.getElementById("rq").value=nextRq();
   renderTempOfertas();
   limpiarOfProv();
   limpiarMatAC();
   document.getElementById("mCot").classList.remove("hidden");
-  document.getElementById("rq").focus();
+  document.getElementById("desc").focus();
 }
 function cerrarMC(){
   document.getElementById("mCot").classList.add("hidden");
