@@ -860,6 +860,7 @@ function guardar(){
   localStorage.setItem(SK.c, JSON.stringify(cots));
   metaUpdate();
   renderAll();
+  syncSheetsSilent();
 }
 function metaUpdate(){
   const kb=(JSON.stringify(localStorage).length/1024).toFixed(1);
@@ -986,6 +987,18 @@ async function syncSheets(){
   } finally {
     btn.disabled=false; btn.textContent="📤 Sincronizar ahora";
   }
+}
+
+async function syncSheetsSilent(){
+  if(!sheetsUrl) return;
+  try {
+    await fetch(sheetsUrl, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ cotizaciones: cots, proveedores: provs, sincronizadoEn: new Date().toISOString() })
+    });
+  } catch(e) { /* silencioso */ }
 }
 
 ["mCot","mProv","mSheets"].forEach(id=>{
