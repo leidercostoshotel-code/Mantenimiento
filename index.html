@@ -424,6 +424,24 @@ table.dt td strong{color:var(--text-1);font-weight:600}
 .prov-selected-chip .chip-clear{cursor:pointer;opacity:.6;margin-left:2px;font-size:11px}
 .prov-selected-chip .chip-clear:hover{opacity:1}
 
+/* ===== DATE FILTER + EXCEL ===== */
+.date-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 0 4px}
+.date-lbl{font-size:11px;font-weight:600;color:var(--text-3);white-space:nowrap}
+.date-inp{font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text-1);cursor:pointer;min-width:0}
+.date-inp:focus{outline:none;border-color:var(--brand-400)}
+.qd-btn{font-size:11px;padding:4px 9px;border-radius:var(--r-full);border:1px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer;font-weight:600;transition:all .12s}
+.qd-btn:hover{background:var(--brand-50);color:var(--brand-600);border-color:var(--brand-300)}
+.btn-excel{background:#166534!important;color:#fff!important;border-color:#166534!important}
+.btn-excel:hover{background:#15803d!important}
+/* Losing providers */
+.losing-offers{margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
+.losing-title{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.losing-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--r-md);background:var(--surface-2);margin-bottom:4px;flex-wrap:wrap}
+.losing-prov{font-size:12px;font-weight:600;color:var(--text-2);flex:1;min-width:100px}
+.losing-vals{font-size:11px;color:var(--text-3)}
+.losing-diff{font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;background:#fee2e2;color:#991b1b}
+[data-theme="dark"] .losing-diff{background:rgba(239,68,68,.15);color:#fca5a5}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:1fr}}
 @media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.span2{grid-column:auto}}
@@ -688,15 +706,27 @@ table.dt td strong{color:var(--text-1);font-weight:600}
   <div id="pg-cotizaciones" class="page hidden">
     <div class="page-header">
       <div><div class="page-title">Cotizaciones</div><div class="page-sub">Administra todas tus solicitudes de compra.</div></div>
-      <div class="toolbar">
-        <div class="search-wrap"><span class="search-ico">🔍</span><input class="search-inp" id="srchCot" placeholder="Buscar..." oninput="filtrarCot()" autocomplete="off"></div>
-        <div class="tabs">
-          <button class="tab on" data-f="all" onclick="setFiltro('all',this)">Todas</button>
-          <button class="tab" data-f="Pendiente" onclick="setFiltro('Pendiente',this)">Pendientes</button>
-          <button class="tab" data-f="Aprobado" onclick="setFiltro('Aprobado',this)">Aprobadas</button>
-          <button class="tab" data-f="Rechazado" onclick="setFiltro('Rechazado',this)">Rechazadas</button>
+      <div class="toolbar" style="flex-direction:column;align-items:flex-start;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%">
+          <div class="search-wrap"><span class="search-ico">🔍</span><input class="search-inp" id="srchCot" placeholder="Buscar..." oninput="filtrarCot()" autocomplete="off"></div>
+          <div class="tabs">
+            <button class="tab on" data-f="all" onclick="setFiltro('all',this)">Todas</button>
+            <button class="tab" data-f="Pendiente" onclick="setFiltro('Pendiente',this)">Pendientes</button>
+            <button class="tab" data-f="Aprobado" onclick="setFiltro('Aprobado',this)">Aprobadas</button>
+            <button class="tab" data-f="Rechazado" onclick="setFiltro('Rechazado',this)">Rechazadas</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="abrirMC()">+ Nueva</button>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="abrirMC()">+ Nueva</button>
+        <div class="date-filter-row">
+          <span class="date-lbl">📅 Desde</span>
+          <input type="date" id="cotDesde" class="date-inp" onchange="filtrarCot()">
+          <span class="date-lbl">Hasta</span>
+          <input type="date" id="cotHasta" class="date-inp" onchange="filtrarCot()">
+          <button class="qd-btn" onclick="filtroHoy()">Hoy</button>
+          <button class="qd-btn" onclick="filtroEsteMes()">Este mes</button>
+          <button class="qd-btn" onclick="limpiarFechas()">✕ Limpiar</button>
+          <button class="btn btn-sm btn-excel" onclick="exportarExcel()">📊 Exportar Excel</button>
+        </div>
       </div>
     </div>
     <div class="cs table-wrap">
@@ -1052,7 +1082,7 @@ function doGet() {
 }`;
 
 let provs = [], cots = [], mats = [];
-let cotFiltro = "all", cotQ = "", provQ = "", matQ = "", matCatQ = "";
+let cotFiltro = "all", cotQ = "", cotDesde = "", cotHasta = "", provQ = "", matQ = "", matCatQ = "";
 let lastRuc = "", rucTimer;
 let confCb = null;
 let tempOfertas = [];
@@ -1682,7 +1712,36 @@ function eliminarCot(id){ id=String(id);
 
 /* ============================================================ FILTERS ============================================================ */
 function setFiltro(f,btn){ cotFiltro=f; document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t===btn)); renderCots(); }
-function filtrarCot(){ cotQ=document.getElementById("srchCot").value.toLowerCase(); renderCots(); }
+function filtrarCot(){
+  cotQ=document.getElementById("srchCot").value.toLowerCase();
+  cotDesde=document.getElementById("cotDesde").value;
+  cotHasta=document.getElementById("cotHasta").value;
+  renderCots();
+}
+function filtroHoy(){
+  const t=new Date().toISOString().slice(0,10);
+  document.getElementById("cotDesde").value=t;
+  document.getElementById("cotHasta").value=t;
+  cotDesde=cotHasta=t; renderCots();
+}
+function filtroEsteMes(){
+  const n=new Date();
+  const f=new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10);
+  const l=new Date(n.getFullYear(),n.getMonth()+1,0).toISOString().slice(0,10);
+  document.getElementById("cotDesde").value=f;
+  document.getElementById("cotHasta").value=l;
+  cotDesde=f; cotHasta=l; renderCots();
+}
+function limpiarFechas(){
+  document.getElementById("cotDesde").value="";
+  document.getElementById("cotHasta").value="";
+  cotDesde=cotHasta=""; renderCots();
+}
+function applyDateFilter(list){
+  if(cotDesde){ const d=new Date(cotDesde+"T00:00:00"); list=list.filter(c=>new Date(c.ts)>=d); }
+  if(cotHasta){ const h=new Date(cotHasta+"T23:59:59"); list=list.filter(c=>new Date(c.ts)<=h); }
+  return list;
+}
 function filtrarProv(){ provQ=document.getElementById("srchProv").value.toLowerCase(); renderProvs(); }
 
 /* ============================================================ RENDER ============================================================ */
@@ -1727,6 +1786,7 @@ function renderCots(){
   let list=cots;
   if(cotFiltro!=="all") list=list.filter(c=>c.estado===cotFiltro);
   if(cotQ) list=list.filter(c=>c.descripcion.toLowerCase().includes(cotQ)||(c.ofertas||[]).some(o=>o.proveedor.toLowerCase().includes(cotQ))||c.rq.toLowerCase().includes(cotQ));
+  list=applyDateFilter(list);
   if(!list.length){ tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-title">${cots.length?"Sin resultados":"Sin cotizaciones"}</div><div class="empty-desc">${cots.length?"Cambia el filtro o búsqueda.":"Crea tu primera cotización para empezar."}</div></div></td></tr>`; return; }
   tb.innerHTML=list.map(c=>{
     const sel=cotSelectedOffer(c); const best=cotBestOffer(c);
@@ -1813,10 +1873,26 @@ function renderAppr(){
     html+=`<div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">✅ Aprobadas recientemente (${appr.length})</div>`;
     html+=appr.slice(0,5).map(c=>{
       const sel=cotSelectedOffer(c);
+      const losers=(c.ofertas||[]).filter(o=>o.id!==sel?.id);
+      const losersHtml=losers.length?`
+        <div class="losing-offers">
+          <div class="losing-title">❌ No seleccionados (${losers.length})</div>
+          ${losers.map(o=>{
+            const diffPct=sel&&sel.total>0?`+${(((o.total-sel.total)/sel.total)*100).toFixed(1)}% sobre ganador`:"";
+            return `<div class="losing-row">
+              <div style="width:20px;height:20px;border-radius:50%;background:${provColor(o.proveedor)};display:grid;place-items:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${provInitial(o.proveedor)}</div>
+              <div class="losing-prov">${esc(o.proveedor)}</div>
+              <div class="losing-vals">${o.cantidad} und × ${S(o.precio)}</div>
+              <div class="losing-vals"><strong>${S(o.total)}</strong></div>
+              ${diffPct?`<span class="losing-diff">${diffPct}</span>`:""}
+            </div>`;
+          }).join("")}
+        </div>`:"";
       return `<div class="appr-card-v2" style="border-color:#86efac">
         <div class="appr-id-v2">${esc(String(c.id))} · ${esc(c.rq)} · ${fDate(c.ts)}</div>
         <div class="appr-desc-v2">${esc(c.descripcion)}</div>
         ${sel?`<div class="appr-winner-badge">🏆 ${esc(sel.proveedor)} · ${S(sel.total)} · ${sel.cantidad} und × ${S(sel.precio)}</div>`:""}
+        ${losersHtml}
       </div>`;
     }).join("");
   }
@@ -1866,6 +1942,56 @@ function bdg(estado){
 }
 
 /* ============================================================ EXPORTS ============================================================ */
+function exportarExcel(){
+  let list=applyDateFilter(cots.filter(c=>cotFiltro==="all"||c.estado===cotFiltro));
+  if(cotQ) list=list.filter(c=>c.descripcion.toLowerCase().includes(cotQ)||(c.ofertas||[]).some(o=>o.proveedor.toLowerCase().includes(cotQ))||c.rq.toLowerCase().includes(cotQ));
+  if(!list.length) return toast("No hay datos para exportar.","err");
+
+  const stCol={"Aprobado":"#dcfce7","Rechazado":"#fee2e2","Pendiente":"#fef9c3"};
+  const hdr=`<tr style="background:#1d4ed8;color:#fff;font-weight:bold">
+    <th>ID Cotización</th><th>Código RQ</th><th>Descripción</th><th>Proveedor</th>
+    <th>Cantidad</th><th>Precio Unit.</th><th>Total</th><th>Ganadora</th><th>Estado Cot.</th><th>Fecha</th><th>Notas</th>
+  </tr>`;
+
+  const rows=list.flatMap(c=>{
+    const ofs=[...( c.ofertas||[])].sort((a,b)=>a.total-b.total);
+    const bestTotal=ofs[0]?.total||0;
+    const bg=stCol[c.estado]||"#fff";
+    return ofs.map((o,i)=>{
+      const isWin=c.ofertaSeleccionadaId===o.id||(i===0&&!c.ofertaSeleccionadaId&&c.estado==="Aprobado");
+      const rowBg=isWin&&c.estado==="Aprobado"?"#bbf7d0":i===0&&c.estado!=="Rechazado"?"#f0fdf4":bg;
+      const diff=bestTotal>0&&i>0?`+${(((o.total-bestTotal)/bestTotal)*100).toFixed(1)}%`:"";
+      return `<tr style="background:${rowBg}">
+        <td>${c.id}</td><td>${esc(c.rq)}</td><td>${esc(c.descripcion)}</td>
+        <td>${esc(o.proveedor)}</td><td style="text-align:right">${o.cantidad}</td>
+        <td style="text-align:right">S/${o.precio.toFixed(2)}</td>
+        <td style="text-align:right;font-weight:bold">S/${o.total.toFixed(2)}</td>
+        <td style="text-align:center;font-weight:bold">${isWin&&c.estado==="Aprobado"?"✓ SÍ":diff||"—"}</td>
+        <td>${esc(c.estado)}</td>
+        <td>${fDate(c.ts)}</td><td>${esc(c.notas||"")}</td>
+      </tr>`;
+    });
+  }).join("");
+
+  const filtInfo=(cotDesde||cotHasta)?`Período: ${cotDesde||"inicio"} → ${cotHasta||"hoy"} &nbsp;|&nbsp; `:"";
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head><meta charset="UTF-8">
+<style>table{border-collapse:collapse}td,th{border:1px solid #cbd5e1;padding:6px 10px;font-size:12px;font-family:Arial,sans-serif}th{white-space:nowrap}</style>
+</head><body>
+<p style="font-size:13px;font-weight:bold;color:#1d4ed8">📋 Reporte de Cotizaciones — Hotel Mantenimiento</p>
+<p style="font-size:11px;color:#64748b">${filtInfo}Total registros: ${list.length} &nbsp;|&nbsp; Exportado: ${new Date().toLocaleDateString("es-PE",{day:"2-digit",month:"long",year:"numeric"})}</p>
+<table>${hdr}${rows}</table>
+<p style="font-size:10px;color:#94a3b8;margin-top:12px">🟢 Verde oscuro = Oferta ganadora aprobada &nbsp; 🟢 Verde claro = Mejor precio &nbsp; 🔴 Rojo = Rechazado &nbsp; 🟡 Amarillo = Pendiente</p>
+</body></html>`;
+
+  const blob=new Blob(["﻿"+html],{type:"application/vnd.ms-excel;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`Cotizaciones_${new Date().toISOString().slice(0,10)}.xls`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast("Excel exportado con colores.","ok");
+}
+
 function exportarCSV(){
   if(!cots.length) return toast("No hay cotizaciones para exportar.","err");
   let csv="ID,RQ,Descripcion,Proveedor,Cantidad,Precio,Total,Estado,Fecha,Notas\n";
