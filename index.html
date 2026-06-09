@@ -340,6 +340,24 @@ table.dt td strong{color:var(--text-1);font-weight:600}
 .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .counter-chip{display:inline-flex;font-size:11px;font-weight:700;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);border-radius:var(--r-full);padding:2px 9px}
 
+/* ===== PROVEEDOR AUTOCOMPLETE ===== */
+.prov-ac-wrap{position:relative}
+.prov-dropdown{position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--surface);border:1.5px solid var(--brand-300);border-radius:var(--r-md);box-shadow:0 12px 32px rgba(0,0,0,.14);z-index:9999;max-height:230px;overflow-y:auto;display:none}
+.prov-dropdown.open{display:block}
+.prov-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.prov-item:last-child{border-bottom:none}
+.prov-item:hover,.prov-item.prov-active{background:var(--sidebar-active)}
+.prov-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.prov-info{flex:1;min-width:0}
+.prov-name{font-size:13px;font-weight:600;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prov-ruc{font-size:11px;color:var(--text-3);margin-top:1px}
+.prov-badge{flex-shrink:0;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--brand-50);color:var(--brand-600);border:1px solid var(--brand-200)}
+.prov-empty-msg{padding:14px;text-align:center;font-size:12px;color:var(--text-3)}
+.prov-selected-chip{display:inline-flex;align-items:center;gap:6px;background:var(--brand-50);border:1.5px solid var(--brand-200);color:var(--brand-700);border-radius:var(--r-full);padding:3px 10px 3px 6px;font-size:12px;font-weight:600;margin-top:4px}
+.prov-selected-chip .chip-avatar{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+.prov-selected-chip .chip-clear{cursor:pointer;opacity:.6;margin-left:2px;font-size:11px}
+.prov-selected-chip .chip-clear:hover{opacity:1}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:1fr}}
 @media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.span2{grid-column:auto}}
@@ -655,7 +673,15 @@ table.dt td strong{color:var(--text-1);font-weight:600}
     <div class="m-body">
       <div class="fgrid g2" style="gap:13px">
         <div class="fg"><label class="fl">Código RQ *</label><input id="rq" class="fi" placeholder="RQ-001" autocomplete="off"></div>
-        <div class="fg"><label class="fl">Proveedor *</label><select id="proveedor" class="fs fi"></select></div>
+        <div class="fg"><label class="fl">Proveedor *</label>
+          <div class="prov-ac-wrap">
+            <input id="provSearch" class="fi" placeholder="Escribe para buscar proveedor..." autocomplete="off"
+              oninput="onProvSearch()" onfocus="onProvFocus()" onkeydown="onProvKey(event)">
+            <input type="hidden" id="proveedor" value="">
+            <div class="prov-dropdown" id="provDropdown"></div>
+          </div>
+          <div id="provChip" style="display:none"></div>
+        </div>
         <div class="fg span2"><label class="fl">Descripción del producto o servicio *</label><input id="desc" class="fi" placeholder="Describe el ítem a cotizar"></div>
         <div class="fg"><label class="fl">Cantidad *</label><input id="qty" type="number" min="1" class="fi" placeholder="1"></div>
         <div class="fg"><label class="fl">Precio unitario (S/) *</label><input id="precio" type="number" min="0" step="0.01" class="fi" placeholder="0.00"></div>
@@ -922,10 +948,7 @@ document.getElementById("confOk").onclick=()=>{ confCb?.(); cancelConf(); };
 
 /* ============================================================ MODALS ============================================================ */
 function abrirMC(){
-  const sel=document.getElementById("proveedor");
-  sel.innerHTML=provs.length
-    ?provs.map(p=>`<option value="${esc(pNom(p))}">${esc(pNom(p))}${p.ruc?` · ${esc(p.ruc)}`:""}</option>`).join("")
-    :`<option value="">Sin proveedores</option>`;
+  limpiarProvAC();
   document.getElementById("mCot").classList.remove("hidden");
   document.getElementById("rq").focus();
 }
@@ -933,9 +956,82 @@ function cerrarMC(){
   document.getElementById("mCot").classList.add("hidden");
   ["rq","desc","qty","precio","notas"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("totPrev").textContent="S/0.00";
+  limpiarProvAC();
 }
 function abrirMP(){ document.getElementById("mProv").classList.remove("hidden"); document.getElementById("rucInp").focus(); }
 function cerrarMP(){ document.getElementById("mProv").classList.add("hidden"); limpiarFormProv(); }
+
+/* ===== PROVEEDOR AUTOCOMPLETE ===== */
+const PROV_COLORS=["#3b82f6","#8b5cf6","#ec4899","#f59e0b","#10b981","#06b6d4","#ef4444","#14b8a6","#f97316","#6366f1"];
+function provColor(n){let h=0;for(const c of n)h=((h<<5)-h)+c.charCodeAt(0);return PROV_COLORS[Math.abs(h)%PROV_COLORS.length];}
+function provInitial(n){return n.trim().charAt(0).toUpperCase();}
+
+let provAcIndex=-1;
+let provBlurTimer=null;
+
+function onProvSearch(){
+  const q=document.getElementById("provSearch").value.trim().toLowerCase();
+  document.getElementById("proveedor").value="";
+  document.getElementById("provChip").style.display="none";
+  provAcIndex=-1;
+  renderProvDropdown(q);
+}
+function onProvFocus(){
+  const q=document.getElementById("provSearch").value.trim().toLowerCase();
+  renderProvDropdown(q);
+}
+function renderProvDropdown(q){
+  const dd=document.getElementById("provDropdown");
+  const list=q?provs.filter(p=>pNom(p).toLowerCase().includes(q)||(p.ruc||"").includes(q)):provs;
+  if(!list.length){
+    dd.innerHTML=`<div class="prov-empty-msg">${q?"Sin resultados para \""+esc(q)+"\"":"Sin proveedores registrados"}</div>`;
+  } else {
+    dd.innerHTML=list.map((p,i)=>{
+      const nom=pNom(p); const col=provColor(nom);
+      const hl=q?nom.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi"),"<mark style='background:rgba(59,130,246,.18);border-radius:2px;padding:0 1px'>$1</mark>"):esc(nom);
+      return `<div class="prov-item" data-nom="${esc(nom)}" onmousedown="selectProv('${esc(nom).replace(/'/g,"\\'")}')">
+        <div class="prov-avatar" style="background:${col}">${provInitial(nom)}</div>
+        <div class="prov-info"><div class="prov-name">${hl}</div>${p.ruc?`<div class="prov-ruc">RUC ${esc(p.ruc)}</div>`:""}</div>
+        ${p.ruc?`<span class="prov-badge">${esc(p.estado||"Activo")}</span>`:""}
+      </div>`;
+    }).join("");
+  }
+  dd.classList.add("open");
+}
+function onProvKey(e){
+  const dd=document.getElementById("provDropdown");
+  const items=dd.querySelectorAll(".prov-item");
+  if(!items.length) return;
+  if(e.key==="ArrowDown"){e.preventDefault();provAcIndex=Math.min(provAcIndex+1,items.length-1);highlightProvItem(items);}
+  else if(e.key==="ArrowUp"){e.preventDefault();provAcIndex=Math.max(provAcIndex-1,0);highlightProvItem(items);}
+  else if(e.key==="Enter"&&provAcIndex>=0){e.preventDefault();items[provAcIndex].dispatchEvent(new MouseEvent("mousedown"));}
+  else if(e.key==="Escape"){dd.classList.remove("open"); provAcIndex=-1;}
+}
+function highlightProvItem(items){
+  items.forEach((el,i)=>el.classList.toggle("prov-active",i===provAcIndex));
+  items[provAcIndex]?.scrollIntoView({block:"nearest"});
+}
+function selectProv(nom){
+  document.getElementById("proveedor").value=nom;
+  document.getElementById("provSearch").value=nom;
+  document.getElementById("provDropdown").classList.remove("open");
+  provAcIndex=-1;
+  const col=provColor(nom);
+  const chip=document.getElementById("provChip");
+  chip.innerHTML=`<div class="prov-selected-chip"><div class="chip-avatar" style="background:${col}">${provInitial(nom)}</div>${esc(nom)}<span class="chip-clear" onclick="limpiarProvAC()">✕</span></div>`;
+  chip.style.display="block";
+}
+function limpiarProvAC(){
+  document.getElementById("proveedor").value="";
+  document.getElementById("provSearch").value="";
+  document.getElementById("provDropdown").classList.remove("open");
+  document.getElementById("provChip").style.display="none";
+  provAcIndex=-1;
+}
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".prov-ac-wrap")&&!e.target.closest("#provChip"))
+    document.getElementById("provDropdown")?.classList.remove("open");
+});
 
 function abrirSheets(){
   document.getElementById("sheetsUrl").value = sheetsUrl;
@@ -1123,6 +1219,7 @@ function guardarCot(){
   const notas=document.getElementById("notas").value.trim();
   if(!provs.length) return toast("Agrega al menos un proveedor antes de cotizar.","err");
   if(!rq||!d) return toast("Completa el código RQ y la descripción.","err");
+  if(!prov) return toast("Selecciona un proveedor de la lista.","err");
   if(qty<=0||price<=0) return toast("Cantidad y precio deben ser mayores a cero.","err");
   cots.unshift({id:Date.now(),rq,descripcion:d,cantidad:qty,proveedor:prov,precio:price,total:qty*price,notas,estado:"Pendiente",ts:Date.now()});
   cerrarMC(); guardar(); toast("Cotización registrada.","ok");
