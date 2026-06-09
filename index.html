@@ -724,7 +724,7 @@ table.dt td strong{color:var(--text-1);font-weight:600}
     <div class="m-head"><div class="m-title">Agregar material</div><button class="m-close" onclick="cerrarMM()">✕</button></div>
     <div class="m-body">
       <div class="fgrid g2" style="gap:13px">
-        <div class="fg"><label class="fl">Código (opcional)</label><input id="matCodigo" class="fi" placeholder="MAT-001" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Código</label><input id="matCodigo" class="fi" readonly style="background:var(--surface-2);color:var(--text-3);cursor:default" placeholder="Auto-generado"></div>
         <div class="fg"><label class="fl">Categoría *</label>
           <select id="matCat" class="fs fi">
             <option value="">Selecciona...</option>
@@ -894,18 +894,18 @@ const CAT_COLORS = {
 const catStyle = cat => CAT_COLORS[cat] || CAT_COLORS["Otros"];
 
 const DEFAULT_MATS = [
-  {nombre:"Pintura látex",categoria:"Pintura",unidad:"Galón",codigo:"MAT-001"},
-  {nombre:"Pintura esmalte",categoria:"Pintura",unidad:"Galón",codigo:"MAT-002"},
-  {nombre:"Silicona selladora",categoria:"Ferretería",unidad:"Unidad",codigo:"MAT-003"},
-  {nombre:"Cable eléctrico 2.5mm",categoria:"Electricidad",unidad:"Metro",codigo:"MAT-004"},
-  {nombre:"Interruptor simple",categoria:"Electricidad",unidad:"Unidad",codigo:"MAT-005"},
-  {nombre:"Foco LED 9W",categoria:"Electricidad",unidad:"Unidad",codigo:"MAT-006"},
-  {nombre:"Tubo PVC 1/2\"",categoria:"Plomería",unidad:"Metro",codigo:"MAT-007"},
-  {nombre:"Llave de paso 1/2\"",categoria:"Plomería",unidad:"Unidad",codigo:"MAT-008"},
-  {nombre:"Bisagra de acero",categoria:"Carpintería",unidad:"Par",codigo:"MAT-009"},
-  {nombre:"Cerradura de pomo",categoria:"Carpintería",unidad:"Unidad",codigo:"MAT-010"},
-  {nombre:"Desinfectante industrial",categoria:"Limpieza",unidad:"Litro",codigo:"MAT-011"},
-  {nombre:"Guantes de nitrilo",categoria:"Seguridad",unidad:"Caja",codigo:"MAT-012"},
+  {nombre:"Pintura látex",categoria:"Pintura",unidad:"Galón",codigo:"2000001"},
+  {nombre:"Pintura esmalte",categoria:"Pintura",unidad:"Galón",codigo:"2000002"},
+  {nombre:"Silicona selladora",categoria:"Ferretería",unidad:"Unidad",codigo:"2000003"},
+  {nombre:"Cable eléctrico 2.5mm",categoria:"Electricidad",unidad:"Metro",codigo:"2000004"},
+  {nombre:"Interruptor simple",categoria:"Electricidad",unidad:"Unidad",codigo:"2000005"},
+  {nombre:"Foco LED 9W",categoria:"Electricidad",unidad:"Unidad",codigo:"2000006"},
+  {nombre:"Tubo PVC 1/2\"",categoria:"Plomería",unidad:"Metro",codigo:"2000007"},
+  {nombre:"Llave de paso 1/2\"",categoria:"Plomería",unidad:"Unidad",codigo:"2000008"},
+  {nombre:"Bisagra de acero",categoria:"Carpintería",unidad:"Par",codigo:"2000009"},
+  {nombre:"Cerradura de pomo",categoria:"Carpintería",unidad:"Unidad",codigo:"2000010"},
+  {nombre:"Desinfectante industrial",categoria:"Limpieza",unidad:"Litro",codigo:"2000011"},
+  {nombre:"Guantes de nitrilo",categoria:"Seguridad",unidad:"Caja",codigo:"2000012"},
 ];
 const RUC_API = "https://graphperu.daustinn.com/api/query/";
 const DEFAULT_PROV = ["Proveedor estratégico","Servicios Andinos","Suministros Lima"];
@@ -1084,7 +1084,16 @@ function cerrarMC(){
 }
 function abrirMP(){ document.getElementById("mProv").classList.remove("hidden"); document.getElementById("rucInp").focus(); }
 function cerrarMP(){ document.getElementById("mProv").classList.add("hidden"); limpiarFormProv(); }
-function abrirMM(){ document.getElementById("mMat").classList.remove("hidden"); document.getElementById("matNombre").focus(); }
+function nextMatCodigo(){
+  if(!mats.length) return "2000001";
+  const nums=mats.map(m=>parseInt(m.codigo)||0).filter(n=>n>=2000000);
+  return String(nums.length ? Math.max(...nums)+1 : 2000001);
+}
+function abrirMM(){
+  document.getElementById("matCodigo").value=nextMatCodigo();
+  document.getElementById("mMat").classList.remove("hidden");
+  document.getElementById("matNombre").focus();
+}
 function cerrarMM(){
   document.getElementById("mMat").classList.add("hidden");
   ["matCodigo","matNombre","matDesc"].forEach(id=>document.getElementById(id).value="");
@@ -1095,7 +1104,7 @@ function guardarMat(){
   const nombre=document.getElementById("matNombre").value.trim();
   const categoria=document.getElementById("matCat").value;
   const unidad=document.getElementById("matUnidad").value;
-  const codigo=document.getElementById("matCodigo").value.trim();
+  const codigo=document.getElementById("matCodigo").value.trim()||nextMatCodigo();
   const descripcion=document.getElementById("matDesc").value.trim();
   if(!nombre) return toast("Ingresa el nombre del material.","err");
   if(!categoria) return toast("Selecciona una categoría.","err");
