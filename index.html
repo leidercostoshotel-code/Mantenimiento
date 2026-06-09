@@ -1542,6 +1542,7 @@ async function syncSheetsSilent(){
     if(e.target===e.currentTarget){
       if(id==="mCot") cerrarMC();
       else if(id==="mProv") cerrarMP();
+      else if(id==="mMat") cerrarMM();
       else cerrarSheets();
     }
   });
@@ -1557,12 +1558,9 @@ document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key==="n"&&!e.shiftKey){ e.preventDefault(); abrirMC(); }
 });
 
-["qty","precio"].forEach(id=>{
-  document.getElementById(id).addEventListener("input",()=>{
-    const q=parseFloat(document.getElementById("qty").value)||0;
-    const p=parseFloat(document.getElementById("precio").value)||0;
-    document.getElementById("totPrev").textContent=S(q*p);
-  });
+["ofQty","ofPrecio"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener("input", calcOfTotal);
 });
 
 /* ============================================================ SUPPLIERS ============================================================ */
