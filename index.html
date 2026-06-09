@@ -351,6 +351,45 @@ table.dt td strong{color:var(--text-1);font-weight:600}
 .mat-card-name{font-size:13px;font-weight:600;color:var(--text-1)}
 .mat-card-meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap}
 .mat-card-code{font-size:10px;font-family:monospace;color:var(--text-3);background:var(--surface-2);border:1px solid var(--border);padding:1px 5px;border-radius:4px}
+/* ===== MULTI-OFERTA ===== */
+.section-label{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px}
+.section-label:first-child{margin-top:0}
+.add-oferta-row{display:flex;align-items:flex-start;gap:8px;background:var(--surface-2);border:1.5px dashed var(--border);border-radius:var(--r-md);padding:10px;margin-top:4px;flex-wrap:wrap}
+.add-oferta-row .prov-ac-wrap{flex:2;min-width:160px}
+.of-input-sm{width:90px!important;flex-shrink:0}
+.temp-ofertas{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.temp-oferta-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 12px}
+.temp-of-prov{flex:1;font-size:13px;font-weight:600;color:var(--text-1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.temp-of-vals{font-size:12px;color:var(--text-2);white-space:nowrap}
+.temp-of-total{font-size:13px;font-weight:700;color:var(--text-1);white-space:nowrap;min-width:70px;text-align:right}
+/* Comparison view (aprobaciones) */
+.comp-section{margin-top:10px;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border)}
+.comp-header{display:grid;grid-template-columns:1fr 60px 80px 80px 30px 100px 80px;gap:8px;padding:7px 12px;background:var(--surface-2);font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em}
+.comp-offer-row{display:grid;grid-template-columns:1fr 60px 80px 80px 30px 100px 80px;gap:8px;padding:10px 12px;align-items:center;border-top:1px solid var(--border);transition:background .12s}
+.comp-offer-row.best-row{background:#f0fdf4}
+.comp-offer-row.worst-row{background:#fff7f7}
+[data-theme="dark"] .comp-offer-row.best-row{background:rgba(34,197,94,.08)}
+[data-theme="dark"] .comp-offer-row.worst-row{background:rgba(239,68,68,.08)}
+.comp-prov{font-size:12.5px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.comp-num{font-size:12px;color:var(--text-2)}
+.comp-total-val{font-size:13px;font-weight:700}
+.comp-diff{font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px}
+.diff-best{background:#dcfce7;color:#166534}
+.diff-mid{background:#fef9c3;color:#713f12}
+.diff-worst{background:#fee2e2;color:#991b1b}
+[data-theme="dark"] .diff-best{background:rgba(34,197,94,.15);color:#86efac}
+[data-theme="dark"] .diff-mid{background:rgba(234,179,8,.15);color:#fde047}
+[data-theme="dark"] .diff-worst{background:rgba(239,68,68,.15);color:#fca5a5}
+.postor-crown{font-size:14px}
+.appr-card-v2{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.appr-card-v2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
+.appr-id-v2{font-size:11px;font-weight:700;color:var(--text-3);font-family:monospace}
+.appr-desc-v2{font-size:15px;font-weight:700;color:var(--text-1);margin-top:2px}
+.appr-meta-v2{font-size:11.5px;color:var(--text-3);margin-top:3px}
+.appr-winner-badge{display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;color:#166534;border:1.5px solid #86efac;border-radius:99px;padding:3px 10px;font-size:11px;font-weight:700;margin-top:10px}
+[data-theme="dark"] .appr-winner-badge{background:rgba(34,197,94,.1);color:#86efac;border-color:rgba(34,197,94,.3)}
+.approved-offer-summary{background:var(--surface-2);border:1.5px solid var(--brand-200);border-radius:var(--r-md);padding:10px 14px;margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
 /* ===== MAT AUTOCOMPLETE ===== */
 .mat-ac-wrap{position:relative}
 .mat-dropdown{position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--surface);border:1.5px solid var(--brand-300);border-radius:var(--r-md);box-shadow:0 12px 32px rgba(0,0,0,.14);z-index:9999;max-height:230px;overflow-y:auto;display:none}
@@ -662,7 +701,7 @@ table.dt td strong{color:var(--text-1);font-weight:600}
     </div>
     <div class="cs table-wrap">
       <table class="dt">
-        <thead><tr><th>ID</th><th>RQ</th><th>Descripción</th><th>Proveedor</th><th>Cant.</th><th>P. Unit.</th><th>Total</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
+        <thead><tr><th>ID</th><th>RQ</th><th>Descripción</th><th>Proveedor / Ofertas</th><th>Mejor precio</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
         <tbody id="tbCot"></tbody>
       </table>
     </div>
@@ -754,20 +793,13 @@ table.dt td strong{color:var(--text-1);font-weight:600}
 
 <!-- MODAL COTIZACIÓN -->
 <div class="modal-bg hidden" id="mCot">
-  <div class="modal">
+  <div class="modal" style="max-width:700px">
     <div class="m-head"><div class="m-title">Nueva cotización</div><button class="m-close" onclick="cerrarMC()">✕</button></div>
-    <div class="m-body">
-      <div class="fgrid g2" style="gap:13px">
+    <div class="m-body" style="max-height:75vh;overflow-y:auto">
+      <div class="section-label">📋 Datos de la solicitud</div>
+      <div class="fgrid g2" style="gap:11px">
         <div class="fg"><label class="fl">Código RQ *</label><input id="rq" class="fi" placeholder="RQ-001" autocomplete="off"></div>
-        <div class="fg"><label class="fl">Proveedor *</label>
-          <div class="prov-ac-wrap">
-            <input id="provSearch" class="fi" placeholder="Escribe para buscar proveedor..." autocomplete="off"
-              oninput="onProvSearch()" onfocus="onProvFocus()" onkeydown="onProvKey(event)">
-            <input type="hidden" id="proveedor" value="">
-            <div class="prov-dropdown" id="provDropdown"></div>
-          </div>
-          <div id="provChip" style="display:none"></div>
-        </div>
+        <div class="fg"><label class="fl">ID Cotización</label><input id="cotId" class="fi" readonly style="background:var(--surface-2);color:var(--text-3);cursor:default" placeholder="Auto-generado"></div>
         <div class="fg span2"><label class="fl">Material / Descripción *</label>
           <div class="mat-ac-wrap">
             <input id="desc" class="fi" placeholder="Escribe o busca en la lista de materiales..." autocomplete="off"
@@ -776,15 +808,30 @@ table.dt td strong{color:var(--text-1);font-weight:600}
           </div>
           <div id="matChip" style="display:none"></div>
         </div>
-        <div class="fg"><label class="fl">Cantidad *</label><input id="qty" type="number" min="1" class="fi" placeholder="1"></div>
-        <div class="fg"><label class="fl">Precio unitario (S/) *</label><input id="precio" type="number" min="0" step="0.01" class="fi" placeholder="0.00"></div>
-        <div class="fg span2"><label class="fl">Notas / Observaciones</label><input id="notas" class="fi" placeholder="Condiciones, referencias, etc. (opcional)"></div>
+        <div class="fg span2"><label class="fl">Observaciones generales</label><input id="cotNotas" class="fi" placeholder="Especificaciones, condiciones de entrega, etc. (opcional)" autocomplete="off"></div>
       </div>
-      <div class="total-preview">Total estimado <strong id="totPrev">S/0.00</strong></div>
+
+      <div class="section-label">🏢 Agregar ofertas de proveedores</div>
+      <div class="add-oferta-row">
+        <div style="flex:2;min-width:150px">
+          <div class="prov-ac-wrap">
+            <input id="ofProvSearch" class="fi" placeholder="Buscar proveedor..." autocomplete="off"
+              oninput="onOfProvSearch()" onfocus="onOfProvFocus()" onkeydown="onOfProvKey(event)" style="font-size:12px">
+            <input type="hidden" id="ofProveedor" value="">
+            <div class="prov-dropdown" id="ofProvDropdown"></div>
+          </div>
+          <div id="ofProvChip" style="display:none"></div>
+        </div>
+        <input id="ofQty" type="number" min="1" class="fi of-input-sm" placeholder="Cant." style="font-size:12px">
+        <input id="ofPrecio" type="number" min="0" step="0.01" class="fi of-input-sm" placeholder="S/Precio" oninput="calcOfTotal()" style="font-size:12px">
+        <div style="font-size:12px;color:var(--text-3);white-space:nowrap;align-self:center">Total: <strong id="ofTotalPrev" style="color:var(--text-1)">S/0.00</strong></div>
+        <button class="btn btn-primary btn-sm" onclick="agregarOfertaTemp()" style="flex-shrink:0;white-space:nowrap">+ Agregar</button>
+      </div>
+      <div id="tempOfertasList" class="temp-ofertas"></div>
     </div>
     <div class="m-foot">
       <button class="btn btn-ghost" onclick="cerrarMC()">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarCot()">Guardar cotización</button>
+      <button class="btn btn-primary" onclick="guardarCot()">💾 Guardar cotización</button>
     </div>
   </div>
 </div>
@@ -974,6 +1021,25 @@ let provs = [], cots = [], mats = [];
 let cotFiltro = "all", cotQ = "", provQ = "", matQ = "", matCatQ = "";
 let lastRuc = "", rucTimer;
 let confCb = null;
+let tempOfertas = [];
+
+function nextCotId(){
+  const nums=cots.map(c=>parseInt(String(c.id))).filter(n=>n>=10000001&&n<=99999999);
+  return String(nums.length?Math.max(...nums)+1:10000001);
+}
+function normCots(list){
+  return list.map(c=>{
+    if(c.ofertas) return c;
+    return {
+      id:String(c.id||uid()), rq:c.rq||"", descripcion:c.descripcion||"",
+      estado:c.estado||"Pendiente", ts:c.ts||Date.now(), notas:c.notas||"",
+      ofertas:[{id:uid(),proveedor:c.proveedor||"",cantidad:c.cantidad||1,precio:c.precio||0,total:c.total||0,notas:""}],
+      ofertaSeleccionadaId:null
+    };
+  });
+}
+function cotBestOffer(c){ return c.ofertas?.length ? c.ofertas.reduce((b,o)=>o.total<b.total?o:b, c.ofertas[0]) : null; }
+function cotSelectedOffer(c){ return c.ofertaSeleccionadaId ? c.ofertas?.find(o=>o.id===c.ofertaSeleccionadaId) : cotBestOffer(c); }
 let sheetsUrl = "";
 
 /* ============================================================ UTILS ============================================================ */
@@ -998,7 +1064,7 @@ function normProv(list){
 function cargar(){
   try{
     provs = normProv(JSON.parse(localStorage.getItem(SK.p)) || DEFAULT_PROV);
-    cots  = JSON.parse(localStorage.getItem(SK.c)) || [];
+    cots  = normCots(JSON.parse(localStorage.getItem(SK.c)) || []);
     mats  = JSON.parse(localStorage.getItem(SK.m)) || DEFAULT_MATS.map(m=>({id:uid(),...m,descripcion:"",ts:Date.now()}));
     sheetsUrl = localStorage.getItem(SK.sheetsUrl) || "https://script.google.com/macros/s/AKfycbwMOxyopspo-bLg2iuYQvNorFgpxxw7lTmUN9l1IP4sd6_9MZfP5i6DVcdvJOr6kBU/exec";
   }catch{ provs=normProv(DEFAULT_PROV); cots=[]; mats=[]; }
@@ -1072,15 +1138,20 @@ document.getElementById("confOk").onclick=()=>{ confCb?.(); cancelConf(); };
 
 /* ============================================================ MODALS ============================================================ */
 function abrirMC(){
-  limpiarProvAC();
+  tempOfertas=[];
+  document.getElementById("cotId").value=nextCotId();
+  renderTempOfertas();
+  limpiarOfProv();
+  limpiarMatAC();
   document.getElementById("mCot").classList.remove("hidden");
   document.getElementById("rq").focus();
 }
 function cerrarMC(){
   document.getElementById("mCot").classList.add("hidden");
-  ["rq","desc","qty","precio","notas"].forEach(id=>document.getElementById(id).value="");
-  document.getElementById("totPrev").textContent="S/0.00";
-  limpiarProvAC(); limpiarMatAC();
+  ["rq","desc","cotNotas","ofQty","ofPrecio"].forEach(id=>document.getElementById(id).value="");
+  tempOfertas=[];
+  renderTempOfertas();
+  limpiarOfProv(); limpiarMatAC();
 }
 function abrirMP(){ document.getElementById("mProv").classList.remove("hidden"); document.getElementById("rucInp").focus(); }
 function cerrarMP(){ document.getElementById("mProv").classList.add("hidden"); limpiarFormProv(); }
@@ -1118,6 +1189,113 @@ function eliminarMat(id){
   confirmar("¿Eliminar material?",`Se eliminará "${m.nombre}" del catálogo permanentemente.`,()=>{
     mats=mats.filter(x=>x.id!==id); guardar(); toast("Material eliminado.","ok");
   });
+}
+
+/* ===== OFERTA TEMP MANAGEMENT ===== */
+function calcOfTotal(){
+  const q=Number(document.getElementById("ofQty").value)||0;
+  const p=Number(document.getElementById("ofPrecio").value)||0;
+  document.getElementById("ofTotalPrev").textContent=S(q*p);
+}
+function agregarOfertaTemp(){
+  const prov=document.getElementById("ofProveedor").value;
+  const qty=Number(document.getElementById("ofQty").value);
+  const price=Number(document.getElementById("ofPrecio").value);
+  if(!prov) return toast("Selecciona un proveedor para la oferta.","err");
+  if(qty<=0||price<=0) return toast("Ingresa cantidad y precio válidos.","err");
+  if(tempOfertas.some(o=>o.proveedor===prov)) return toast("Ese proveedor ya fue agregado.","err");
+  tempOfertas.push({id:uid(),proveedor:prov,cantidad:qty,precio:price,total:qty*price,notas:""});
+  limpiarOfProv();
+  ["ofQty","ofPrecio"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("ofTotalPrev").textContent="S/0.00";
+  renderTempOfertas();
+  toast(`Oferta de ${prov} agregada.`,"ok");
+}
+function quitarOfertaTemp(idx){
+  tempOfertas.splice(idx,1);
+  renderTempOfertas();
+}
+function renderTempOfertas(){
+  const el=document.getElementById("tempOfertasList");
+  if(!tempOfertas.length){
+    el.innerHTML=`<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-3)">Agrega al menos una oferta de proveedor para continuar.</div>`;
+    return;
+  }
+  const sorted=[...tempOfertas].sort((a,b)=>a.total-b.total);
+  const bestTotal=sorted[0].total;
+  el.innerHTML=tempOfertas.map((o,i)=>{
+    const rank=sorted.findIndex(s=>s.id===o.id);
+    const isBest=rank===0;
+    const diff=bestTotal>0&&!isBest?`+${(((o.total-bestTotal)/bestTotal)*100).toFixed(1)}%`:"";
+    const col=provColor(o.proveedor);
+    return `<div class="temp-oferta-item" style="${isBest?"border-color:#86efac;background:#f0fdf4":""}">
+      <div style="width:24px;height:24px;border-radius:50%;background:${col};display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${provInitial(o.proveedor)}</div>
+      <div class="temp-of-prov">${isBest?"🏆 ":""}${esc(o.proveedor)}</div>
+      <div class="temp-of-vals">${o.cantidad} × ${S(o.precio)}</div>
+      <div class="temp-of-total">${S(o.total)}</div>
+      ${diff?`<span class="comp-diff diff-worst" style="font-size:10px">${diff}</span>`:`<span class="comp-diff diff-best" style="font-size:10px">Mejor</span>`}
+      <button class="btn btn-sm btn-ghost" onclick="quitarOfertaTemp(${i})" style="font-size:12px;padding:3px 7px;flex-shrink:0">✕</button>
+    </div>`;
+  }).join("");
+}
+
+/* ===== OFERTA PROVEEDOR AUTOCOMPLETE ===== */
+let ofProvAcIdx=-1;
+function onOfProvSearch(){
+  document.getElementById("ofProveedor").value="";
+  document.getElementById("ofProvChip").style.display="none";
+  ofProvAcIdx=-1;
+  const q=document.getElementById("ofProvSearch").value.trim().toLowerCase();
+  if(q.length>0) renderOfProvDropdown(q);
+  else document.getElementById("ofProvDropdown").classList.remove("open");
+}
+function onOfProvFocus(){
+  renderOfProvDropdown(document.getElementById("ofProvSearch").value.trim().toLowerCase());
+}
+function renderOfProvDropdown(q){
+  const dd=document.getElementById("ofProvDropdown");
+  const list=q?provs.filter(p=>pNom(p).toLowerCase().includes(q)||(p.ruc||"").includes(q)):provs;
+  if(!list.length){
+    dd.innerHTML=`<div class="prov-empty-msg">${q?`Sin resultados`:"Sin proveedores"}</div>`;
+  } else {
+    dd.innerHTML=list.map(p=>{
+      const nom=pNom(p); const col=provColor(nom);
+      const hl=q?nom.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi"),"<mark style='background:rgba(59,130,246,.18);border-radius:2px;padding:0 1px'>$1</mark>"):esc(nom);
+      return `<div class="prov-item" onmousedown="selectOfProv('${esc(nom).replace(/'/g,"\\'")}')">
+        <div class="prov-avatar" style="background:${col}">${provInitial(nom)}</div>
+        <div class="prov-info"><div class="prov-name">${hl}</div>${p.ruc?`<div class="prov-ruc">RUC ${esc(p.ruc)}</div>`:""}</div>
+        ${p.ruc?`<span class="prov-badge">${esc(p.estado||"Activo")}</span>`:""}
+      </div>`;
+    }).join("");
+  }
+  dd.classList.add("open");
+}
+function onOfProvKey(e){
+  const dd=document.getElementById("ofProvDropdown");
+  const items=dd.querySelectorAll(".prov-item");
+  if(!items.length) return;
+  if(e.key==="ArrowDown"){e.preventDefault();ofProvAcIdx=Math.min(ofProvAcIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle("prov-active",i===ofProvAcIdx));items[ofProvAcIdx]?.scrollIntoView({block:"nearest"});}
+  else if(e.key==="ArrowUp"){e.preventDefault();ofProvAcIdx=Math.max(ofProvAcIdx-1,0);items.forEach((el,i)=>el.classList.toggle("prov-active",i===ofProvAcIdx));items[ofProvAcIdx]?.scrollIntoView({block:"nearest"});}
+  else if(e.key==="Enter"&&ofProvAcIdx>=0){e.preventDefault();items[ofProvAcIdx].dispatchEvent(new MouseEvent("mousedown"));}
+  else if(e.key==="Escape"){dd.classList.remove("open");ofProvAcIdx=-1;}
+}
+function selectOfProv(nom){
+  document.getElementById("ofProveedor").value=nom;
+  document.getElementById("ofProvSearch").value=nom;
+  document.getElementById("ofProvDropdown").classList.remove("open");
+  ofProvAcIdx=-1;
+  const col=provColor(nom);
+  const chip=document.getElementById("ofProvChip");
+  chip.innerHTML=`<div class="prov-selected-chip"><div class="chip-avatar" style="background:${col}">${provInitial(nom)}</div>${esc(nom)}<span class="chip-clear" onclick="limpiarOfProv()">✕</span></div>`;
+  chip.style.display="block";
+  document.getElementById("ofQty").focus();
+}
+function limpiarOfProv(){
+  document.getElementById("ofProveedor").value="";
+  document.getElementById("ofProvSearch").value="";
+  document.getElementById("ofProvDropdown").classList.remove("open");
+  document.getElementById("ofProvChip").style.display="none";
+  ofProvAcIdx=-1;
 }
 
 /* ===== PROVEEDOR AUTOCOMPLETE ===== */
@@ -1192,6 +1370,8 @@ document.addEventListener("click",e=>{
     document.getElementById("provDropdown")?.classList.remove("open");
   if(!e.target.closest(".mat-ac-wrap")&&!e.target.closest("#matChip"))
     document.getElementById("matDropdown")?.classList.remove("open");
+  if(!e.target.closest("#ofProvDropdown")&&!e.target.closest("#ofProvSearch")&&!e.target.closest("#ofProvChip"))
+    document.getElementById("ofProvDropdown")?.classList.remove("open");
 });
 
 /* ===== MATERIAL AUTOCOMPLETE ===== */
@@ -1323,7 +1503,7 @@ async function syncSheetsSilent(){
   } catch(e) { /* silencioso */ }
 }
 
-["mCot","mProv","mSheets"].forEach(id=>{
+["mCot","mProv","mSheets","mMat"].forEach(id=>{
   document.getElementById(id).addEventListener("click",e=>{
     if(e.target===e.currentTarget){
       if(id==="mCot") cerrarMC();
@@ -1429,7 +1609,7 @@ function guardarProv(){
 function eliminarProv(id){
   const p=provs.find(x=>x.id===id); if(!p) return;
   const nom=pNom(p);
-  if(cots.some(c=>c.proveedor===nom)) return toast("No puedes eliminar un proveedor con cotizaciones asociadas.","err");
+  if(cots.some(c=>(c.ofertas||[]).some(o=>o.proveedor===nom))) return toast("No puedes eliminar un proveedor con cotizaciones asociadas.","err");
   confirmar("¿Eliminar proveedor?",`Se eliminará "${nom}" del directorio permanentemente.`,()=>{
     provs=provs.filter(x=>x.id!==id); guardar(); toast("Proveedor eliminado.","ok");
   });
@@ -1439,20 +1619,23 @@ function eliminarProv(id){
 function guardarCot(){
   const rq=document.getElementById("rq").value.trim();
   const d=document.getElementById("desc").value.trim();
-  const qty=Number(document.getElementById("qty").value);
-  const prov=document.getElementById("proveedor").value;
-  const price=Number(document.getElementById("precio").value);
-  const notas=document.getElementById("notas").value.trim();
-  if(!provs.length) return toast("Agrega al menos un proveedor antes de cotizar.","err");
+  const notas=document.getElementById("cotNotas").value.trim();
+  const id=document.getElementById("cotId").value.trim()||nextCotId();
   if(!rq||!d) return toast("Completa el código RQ y la descripción.","err");
-  if(!prov) return toast("Selecciona un proveedor de la lista.","err");
-  if(qty<=0||price<=0) return toast("Cantidad y precio deben ser mayores a cero.","err");
-  cots.unshift({id:Date.now(),rq,descripcion:d,cantidad:qty,proveedor:prov,precio:price,total:qty*price,notas,estado:"Pendiente",ts:Date.now()});
-  cerrarMC(); guardar(); toast("Cotización registrada.","ok");
+  if(!tempOfertas.length) return toast("Agrega al menos una oferta de proveedor.","err");
+  cots.unshift({id,rq,descripcion:d,notas,estado:"Pendiente",ts:Date.now(),ofertas:[...tempOfertas],ofertaSeleccionadaId:null});
+  cerrarMC(); guardar(); toast("Cotización registrada con "+tempOfertas.length+" oferta"+( tempOfertas.length!==1?"s":"")+".","ok");
 }
-function aprobar(id){ const c=cots.find(x=>x.id===id); if(!c) return; c.estado="Aprobado"; guardar(); toast("Cotización aprobada.","ok"); }
-function rechazar(id){ const c=cots.find(x=>x.id===id); if(!c) return; c.estado="Rechazado"; guardar(); toast("Cotización rechazada."); }
-function eliminarCot(id){
+function aprobarOferta(cotId,ofId){
+  const c=cots.find(x=>x.id===cotId); if(!c) return;
+  const of=c.ofertas.find(o=>o.id===ofId); if(!of) return;
+  confirmar("¿Aprobar esta oferta?",`Se aprobará la oferta de <strong>${esc(of.proveedor)}</strong> por <strong>${S(of.total)}</strong>.`,()=>{
+    c.estado="Aprobado"; c.ofertaSeleccionadaId=ofId; guardar();
+    toast(`✓ Aprobado: ${of.proveedor} · ${S(of.total)}`,"ok");
+  });
+}
+function rechazar(cotId){ const c=cots.find(x=>x.id===cotId); if(!c) return; c.estado="Rechazado"; guardar(); toast("Cotización rechazada."); }
+function eliminarCot(id){ id=String(id);
   const c=cots.find(x=>x.id===id); if(!c) return;
   confirmar("¿Eliminar cotización?",`Se eliminará "${c.descripcion}" permanentemente.`,()=>{
     cots=cots.filter(x=>x.id!==id); guardar(); toast("Cotización eliminada.","ok");
@@ -1469,7 +1652,7 @@ function renderAll(){ renderKPIs(); renderDash(); renderCots(); renderProvs(); r
 
 function renderKPIs(){
   const ap=cots.filter(x=>x.estado==="Aprobado");
-  const totalAp=ap.reduce((s,c)=>s+c.total,0);
+  const totalAp=ap.reduce((s,c)=>{ const o=cotSelectedOffer(c); return s+(o?.total||0); },0);
   const tasa=cots.length?Math.round((ap.length/cots.length)*100):0;
   counter("kpiCot",cots.length);
   document.getElementById("kpiMonto").textContent=S(totalAp);
@@ -1499,15 +1682,32 @@ function renderDash(){
   const feed=document.getElementById("actFeed");
   if(!cots.length){ feed.innerHTML=`<div class="empty"><div class="empty-icon">✨</div><div class="empty-title">Sin actividad</div><div class="empty-desc">Registra cotizaciones para ver actividad reciente.</div></div>`; return; }
   const colDot={"Aprobado":"#22c55e","Pendiente":"#f59e0b","Rechazado":"#ef4444"};
-  feed.innerHTML=cots.slice(0,5).map(c=>`<div class="act-item"><div class="act-dot" style="background:${colDot[c.estado]||"#94a3b8"}"></div><div class="act-body"><div class="act-title">${esc(c.descripcion)}</div><div class="act-meta">${esc(c.proveedor)} · ${esc(c.rq)} · ${fDate(c.ts)}</div></div><div class="act-right"><div class="act-amount">${S(c.total)}</div><div style="margin-top:3px">${bdg(c.estado)}</div></div></div>`).join("");
+  feed.innerHTML=cots.slice(0,5).map(c=>{ const best=cotBestOffer(c); const sel=cotSelectedOffer(c); return `<div class="act-item"><div class="act-dot" style="background:${colDot[c.estado]||"#94a3b8"}"></div><div class="act-body"><div class="act-title">${esc(c.descripcion)}</div><div class="act-meta">${esc(sel?.proveedor||"")} · ${esc(c.rq)} · ${fDate(c.ts)}</div></div><div class="act-right"><div class="act-amount">${S(sel?.total||0)}</div><div style="margin-top:3px">${bdg(c.estado)}</div></div></div>`; }).join("");
 }
 function renderCots(){
   const tb=document.getElementById("tbCot");
   let list=cots;
   if(cotFiltro!=="all") list=list.filter(c=>c.estado===cotFiltro);
-  if(cotQ) list=list.filter(c=>c.descripcion.toLowerCase().includes(cotQ)||c.proveedor.toLowerCase().includes(cotQ)||c.rq.toLowerCase().includes(cotQ));
-  if(!list.length){ tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-title">${cots.length?"Sin resultados":"Sin cotizaciones"}</div><div class="empty-desc">${cots.length?"Cambia el filtro o búsqueda.":"Crea tu primera cotización para empezar."}</div></div></td></tr>`; return; }
-  tb.innerHTML=list.map(c=>`<tr><td><span class="id-tag">#${String(c.id).slice(-6)}</span></td><td><strong>${esc(c.rq)}</strong></td><td style="max-width:190px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.descripcion)}">${esc(c.descripcion)}</div>${c.notas?`<div style="font-size:11px;color:var(--text-3);margin-top:1px">${esc(c.notas)}</div>`:""}</td><td>${esc(c.proveedor)}</td><td>${c.cantidad}</td><td>${S(c.precio)}</td><td><strong>${S(c.total)}</strong></td><td>${bdg(c.estado)}</td><td style="font-size:11.5px;color:var(--text-3);white-space:nowrap">${fDate(c.ts)}</td><td><div style="display:flex;gap:5px;align-items:center">${c.estado==="Pendiente"?`<button class="btn btn-sm btn-success" onclick="aprobar(${c.id})" title="Aprobar">✓</button><button class="btn btn-sm btn-danger-outline" onclick="rechazar(${c.id})" title="Rechazar">✕</button>`:""}<button class="btn btn-sm btn-ghost" onclick="eliminarCot(${c.id})" title="Eliminar" style="font-size:13px">🗑</button></div></td></tr>`).join("");
+  if(cotQ) list=list.filter(c=>c.descripcion.toLowerCase().includes(cotQ)||(c.ofertas||[]).some(o=>o.proveedor.toLowerCase().includes(cotQ))||c.rq.toLowerCase().includes(cotQ));
+  if(!list.length){ tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-title">${cots.length?"Sin resultados":"Sin cotizaciones"}</div><div class="empty-desc">${cots.length?"Cambia el filtro o búsqueda.":"Crea tu primera cotización para empezar."}</div></div></td></tr>`; return; }
+  tb.innerHTML=list.map(c=>{
+    const sel=cotSelectedOffer(c); const best=cotBestOffer(c);
+    const nOfs=c.ofertas?.length||0;
+    const provCell=c.estado==="Aprobado"&&sel?`<div style="font-size:12.5px;font-weight:600">${esc(sel.proveedor)}</div><div style="font-size:10px;color:var(--text-3)">Aprobado</div>`:nOfs>1?`<span style="font-size:11px;font-weight:600;background:var(--brand-50);color:var(--brand-600);padding:2px 8px;border-radius:99px;border:1px solid var(--brand-200)">${nOfs} ofertas</span>`:esc(sel?.proveedor||"");
+    return `<tr>
+      <td><span class="id-tag">${esc(String(c.id))}</span></td>
+      <td><strong>${esc(c.rq)}</strong></td>
+      <td style="max-width:180px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.descripcion)}">${esc(c.descripcion)}</div></td>
+      <td>${provCell}</td>
+      <td>${sel?S(sel.total):"—"}</td>
+      <td>${bdg(c.estado)}</td>
+      <td style="font-size:11px;color:var(--text-3);white-space:nowrap">${fDate(c.ts)}</td>
+      <td><div style="display:flex;gap:5px;align-items:center">
+        ${c.estado==="Pendiente"?`<button class="btn btn-sm btn-ghost" onclick="nav('aprobaciones')" title="Ver ofertas" style="font-size:11px">👁 Ver</button>`:""}
+        <button class="btn btn-sm btn-ghost" onclick="eliminarCot('${esc(String(c.id))}')" title="Eliminar" style="font-size:13px">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join("");
 }
 function renderProvs(){
   const list=document.getElementById("listaProv");
@@ -1525,10 +1725,64 @@ function renderAppr(){
   const list=document.getElementById("apprList");
   const badge=document.getElementById("pendBadge");
   const pend=cots.filter(c=>c.estado==="Pendiente");
+  const appr=cots.filter(c=>c.estado==="Aprobado");
   badge.style.display=pend.length?"inline-flex":"none";
   badge.textContent=`${pend.length} pendiente${pend.length!==1?"s":""}`;
-  if(!pend.length){ list.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">¡Todo al día!</div><div class="empty-desc">No hay cotizaciones pendientes de aprobación.</div></div>`; return; }
-  list.innerHTML=pend.map(c=>`<div class="appr-card"><div style="flex:1;min-width:0"><div class="appr-id">#${String(c.id).slice(-6)} · ${esc(c.rq)} · ${fDate(c.ts)}</div><div class="appr-desc">${esc(c.descripcion)}</div><div class="appr-sub">${esc(c.proveedor)} · ${c.cantidad} ud${c.cantidad!==1?"s":""} × ${S(c.precio)}</div>${c.notas?`<div class="appr-sub" style="margin-top:3px">💬 ${esc(c.notas)}</div>`:""}</div><div class="appr-amount">${S(c.total)}</div><div style="display:flex;gap:7px;flex-shrink:0;align-self:flex-start;padding-top:2px"><button class="btn btn-success btn-sm" onclick="aprobar(${c.id})">✓ Aprobar</button><button class="btn btn-ghost btn-sm" onclick="rechazar(${c.id})" style="color:var(--red-500)">✕ Rechazar</button></div></div>`).join("");
+  if(!pend.length&&!appr.length){ list.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">¡Todo al día!</div><div class="empty-desc">No hay cotizaciones pendientes de aprobación.</div></div>`; return; }
+
+  const renderComp=(c)=>{
+    const ofs=[...c.ofertas].sort((a,b)=>a.total-b.total);
+    const bestTotal=ofs[0]?.total||0;
+    return `
+      <div class="comp-section">
+        <div class="comp-header"><span>Proveedor</span><span>Cant.</span><span>P. Unit.</span><span>Total</span><span></span><span>Diferencia</span><span>Acción</span></div>
+        ${ofs.map((o,i)=>{
+          const isBest=i===0, isWorst=i===ofs.length-1&&ofs.length>1;
+          const diffPct=bestTotal>0&&!isBest?`+${(((o.total-bestTotal)/bestTotal)*100).toFixed(1)}%`:"";
+          const rowCls=isBest?"best-row":isWorst&&ofs.length>1?"worst-row":"";
+          const diffBadge=isBest?`<span class="comp-diff diff-best">🏆 Mejor</span>`:isWorst&&ofs.length>1?`<span class="comp-diff diff-worst">${diffPct}</span>`:`<span class="comp-diff diff-mid">${diffPct}</span>`;
+          return `<div class="comp-offer-row ${rowCls}">
+            <div class="comp-prov"><div style="width:22px;height:22px;border-radius:50%;background:${provColor(o.proveedor)};display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${provInitial(o.proveedor)}</div>${esc(o.proveedor)}</div>
+            <div class="comp-num">${o.cantidad}</div>
+            <div class="comp-num">${S(o.precio)}</div>
+            <div class="comp-total-val" style="color:${isBest?"#166534":"var(--text-1)"}">${S(o.total)}</div>
+            <div></div>
+            <div>${diffBadge}</div>
+            <div>${c.estado==="Pendiente"?`<button class="btn btn-success btn-sm" onclick="aprobarOferta('${esc(String(c.id))}','${esc(o.id)}')" style="font-size:11px;padding:4px 10px">✓ Aprobar</button>`:""}</div>
+          </div>`;
+        }).join("")}
+      </div>`;
+  };
+
+  let html="";
+  if(pend.length){
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⏳ Pendientes de aprobación (${pend.length})</div>`;
+    html+=pend.map(c=>`
+      <div class="appr-card-v2">
+        <div class="appr-card-v2-head">
+          <div>
+            <div class="appr-id-v2">${esc(String(c.id))} · ${esc(c.rq)} · ${fDate(c.ts)}</div>
+            <div class="appr-desc-v2">${esc(c.descripcion)}</div>
+            ${c.notas?`<div class="appr-meta-v2">💬 ${esc(c.notas)}</div>`:""}
+            <div class="appr-meta-v2">${c.ofertas.length} oferta${c.ofertas.length!==1?"s":" recibida"} · Mejor: ${S(cotBestOffer(c)?.total||0)} (${esc(cotBestOffer(c)?.proveedor||"")})</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="rechazar('${esc(String(c.id))}')" style="color:var(--red-500);flex-shrink:0">✕ Rechazar todo</button>
+        </div>
+        ${renderComp(c)}
+      </div>`).join("");
+  }
+  if(appr.length){
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">✅ Aprobadas recientemente (${appr.length})</div>`;
+    html+=appr.slice(0,5).map(c=>{
+      const sel=cotSelectedOffer(c);
+      return `<div class="appr-card-v2" style="border-color:#86efac">
+        <div class="appr-id-v2">${esc(String(c.id))} · ${esc(c.rq)} · ${fDate(c.ts)}</div>
+        <div class="appr-desc-v2">${esc(c.descripcion)}</div>
+        ${sel?`<div class="appr-winner-badge">🏆 ${esc(sel.proveedor)} · ${S(sel.total)} · ${sel.cantidad} und × ${S(sel.precio)}</div>`:""}
+      </div>`;
+    }).join("");
+  }
+  list.innerHTML=html;
 }
 function renderBadges(){
   const pe=cots.filter(c=>c.estado==="Pendiente").length;
@@ -1577,7 +1831,10 @@ function bdg(estado){
 function exportarCSV(){
   if(!cots.length) return toast("No hay cotizaciones para exportar.","err");
   let csv="ID,RQ,Descripcion,Proveedor,Cantidad,Precio,Total,Estado,Fecha,Notas\n";
-  cots.forEach(c=>{ csv+=[c.id,csvQ(c.rq),csvQ(c.descripcion),csvQ(c.proveedor),c.cantidad,c.precio,c.total,csvQ(c.estado),csvQ(fDate(c.ts)),csvQ(c.notas||"")].join(",")+"\n"; });
+  cots.forEach(c=>{
+    const sel=cotSelectedOffer(c)||{proveedor:"",cantidad:0,precio:0,total:0};
+    csv+=[c.id,csvQ(c.rq),csvQ(c.descripcion),csvQ(sel.proveedor),sel.cantidad,sel.precio,sel.total,csvQ(c.estado),csvQ(fDate(c.ts)),csvQ(c.notas||"")].join(",")+"\n";
+  });
   dl(csv,"Cotizaciones.csv","text/csv;charset=utf-8"); toast("CSV exportado.","ok");
 }
 function exportarJSON(){
