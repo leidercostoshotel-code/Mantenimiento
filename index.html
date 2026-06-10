@@ -1067,10 +1067,12 @@ const DEFAULT_MATS = [
 const RUC_API = "https://graphperu.daustinn.com/api/query/";
 const DEFAULT_PROV = ["Proveedor estratégico","Servicios Andinos","Suministros Lima"];
 
-const APPS_SCRIPT_CODE = `// ===== COTIZADOR PRO — Google Apps Script v2 =====
+const APPS_SCRIPT_CODE = `// ===== COTIZADOR PRO — Google Apps Script v3 =====
 // Pega este código en script.google.com y despliégalo como Web App
+// v3: moneda PEN/USD, desglose IGV, N° OC y estados post-aprobación
 
 const SHEET_ID = "10ANYR73uWLGa0mmGFuPs3Xmzv8_YNZX88LcqT-hDcsQ";
+const IGV = 0.18;
 
 function doPost(e) {
   try {
@@ -1086,35 +1088,42 @@ function doPost(e) {
   }
 }
 
+function desglose(total, incIgv) {
+  if (incIgv) { const sub = total/(1+IGV); return {sub: sub, igv: total-sub, fin: total}; }
+  return {sub: total, igv: total*IGV, fin: total*(1+IGV)};
+}
+
 function syncCotizaciones(ss, rows) {
   let sh = ss.getSheetByName("Cotizaciones") || ss.insertSheet("Cotizaciones");
   sh.clearContents();
-  const headers = [["ID","RQ","Descripcion","Proveedor Ganador","Total Ganador","N Ofertas","Estado","Fecha","Notas"]];
-  sh.getRange(1,1,1,9).setValues(headers);
-  styleHeader(sh, 9);
+  const headers = [["ID","RQ","N OC","Descripcion","Proveedor Ganador","Moneda","Subtotal","IGV 18%","Total Final","N Ofertas","Estado","Fecha","Notas"]];
+  sh.getRange(1,1,1,13).setValues(headers);
+  styleHeader(sh, 13);
   if (rows.length) {
     const vals = rows.map(c => {
       const ofertas = c.ofertas || [];
       const sel = c.ofertaSeleccionadaId
         ? ofertas.find(o => o.id === c.ofertaSeleccionadaId)
-        : ofertas.sort((a,b) => a.total - b.total)[0];
-      return [c.id, c.rq||"", c.descripcion||"",
-        sel ? sel.proveedor : "", sel ? sel.total : "",
+        : ofertas.slice().sort((a,b) => a.total - b.total)[0];
+      const d = sel ? desglose(sel.total, c.incIgv) : null;
+      return [c.id, c.rq||"", c.ocNum||"", c.descripcion||"",
+        sel ? sel.proveedor : "", c.moneda||"PEN",
+        d ? Math.round(d.sub*100)/100 : "", d ? Math.round(d.igv*100)/100 : "", d ? Math.round(d.fin*100)/100 : "",
         ofertas.length, c.estado||"",
         c.ts ? new Date(c.ts).toLocaleDateString("es-PE") : "", c.notas||""];
     });
-    sh.getRange(2,1,vals.length,9).setValues(vals);
+    sh.getRange(2,1,vals.length,13).setValues(vals);
   }
 }
 
 function syncOfertas(ss, rows) {
   let sh = ss.getSheetByName("Ofertas") || ss.insertSheet("Ofertas");
   sh.clearContents();
-  const headers = [["Cot. ID","RQ","Descripcion","Proveedor","Cantidad","Precio Unit.","Total","Ganadora","Fecha"]];
-  sh.getRange(1,1,1,9).setValues(headers);
-  styleHeader(sh, 9);
+  const headers = [["Cot. ID","RQ","Descripcion","Proveedor","Cantidad","Precio Unit.","Total inc. IGV","Moneda","Ganadora","Fecha"]];
+  sh.getRange(1,1,1,10).setValues(headers);
+  styleHeader(sh, 10);
   if (rows.length) {
-    sh.getRange(2,1,rows.length,9).setValues(rows);
+    sh.getRange(2,1,rows.length,10).setValues(rows);
   }
 }
 
@@ -1158,7 +1167,7 @@ function ok(msg) {
 }
 
 function doGet() {
-  return ok("Cotizador Pro API v2 activa");
+  return ok("Cotizador Pro API v3 activa");
 }`;
 
 let provs = [], cots = [], mats = [];
@@ -1627,7 +1636,7 @@ async function syncSheets(){
       method:"POST",
       mode:"no-cors",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ cotizaciones: cots, proveedores: provs, materiales: mats, ofertas: cots.flatMap(c=>(c.ofertas||[]).map(o=>[c.id,c.rq,c.descripcion,o.proveedor,o.cantidad,o.precio,o.total,c.ofertaSeleccionadaId===o.id?"SI":"",c.ts?new Date(c.ts).toLocaleDateString("es-PE"):""])), sincronizadoEn: new Date().toISOString() })
+      body:JSON.stringify(buildSheetsPayload())
     });
     sheetsUrl=url;
     localStorage.setItem(SK.sheetsUrl, url);
@@ -1645,6 +1654,19 @@ async function syncSheets(){
   }
 }
 
+function buildSheetsPayload(){
+  // Las fotos adjuntas (base64) no se envian a Sheets: harian el payload enorme
+  const cotsLight=cots.map(c=>({...c, ofertas:(c.ofertas||[]).map(o=>{ const {adjunto,...rest}=o; return rest; })}));
+  const ofertasFlat=cots.flatMap(c=>(c.ofertas||[]).map(o=>{
+    const dg=igvDesglose(o.total,c.incIgv);
+    return [c.id,c.rq,c.descripcion,o.proveedor,o.cantidad,o.precio,
+      Math.round(dg.final*100)/100,cotMon(c),
+      c.ofertaSeleccionadaId===o.id?"SI":"",
+      c.ts?new Date(c.ts).toLocaleDateString("es-PE"):""];
+  }));
+  return { cotizaciones:cotsLight, proveedores:provs, materiales:mats, ofertas:ofertasFlat, sincronizadoEn:new Date().toISOString() };
+}
+
 async function syncSheetsSilent(){
   if(!sheetsUrl) return;
   try {
@@ -1652,7 +1674,7 @@ async function syncSheetsSilent(){
       method:"POST",
       mode:"no-cors",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ cotizaciones: cots, proveedores: provs, materiales: mats, ofertas: cots.flatMap(c=>(c.ofertas||[]).map(o=>[c.id,c.rq,c.descripcion,o.proveedor,o.cantidad,o.precio,o.total,c.ofertaSeleccionadaId===o.id?"SI":"",c.ts?new Date(c.ts).toLocaleDateString("es-PE"):""])), sincronizadoEn: new Date().toISOString() })
+      body:JSON.stringify(buildSheetsPayload())
     });
   } catch(e) { /* silencioso */ }
 }
