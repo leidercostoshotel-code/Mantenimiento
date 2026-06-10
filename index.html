@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cotizador Pro — Procurement Suite</title>
+<meta name="theme-color" content="#1d4ed8">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -648,8 +652,15 @@ table.dt td strong{color:var(--text-1);font-weight:600}
     <button class="nav-item" onclick="exportarJSON()">
       <span class="nav-icon">💾</span>Backup JSON
     </button>
+    <button class="nav-item" onclick="document.getElementById('importFile').click()">
+      <span class="nav-icon">📥</span>Importar backup
+    </button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarJSON(event)">
     <button class="nav-item" onclick="abrirSheets()">
       <span class="nav-icon">📊</span>Google Sheets
+    </button>
+    <button class="nav-item" onclick="abrirSeguridad()">
+      <span class="nav-icon">🔐</span>Seguridad
     </button>
   </nav>
   <div class="sidebar-footer">
@@ -698,6 +709,26 @@ table.dt td strong{color:var(--text-1);font-weight:600}
       <div class="cs">
         <div class="cs-head"><div><div class="cs-title">Actividad reciente</div><div class="cs-sub">Últimas 5 cotizaciones</div></div></div>
         <div style="padding:0 20px" id="actFeed"></div>
+      </div>
+    </div>
+    <div class="dash-grid" style="margin-top:16px">
+      <div class="cs">
+        <div class="cs-head"><div><div class="cs-title">📊 Gasto mensual</div><div class="cs-sub">Compras aprobadas — últimos 6 meses (en soles)</div></div></div>
+        <div id="trendMeses" style="display:flex;align-items:flex-end;gap:6px;padding:18px 20px 14px;min-height:130px"></div>
+      </div>
+      <div class="cs">
+        <div class="cs-head"><div><div class="cs-title">🏷️ Gasto por categoría</div><div class="cs-sub">Top 5 categorías de materiales</div></div></div>
+        <div class="chart-rows" id="trendCats"></div>
+      </div>
+    </div>
+    <div class="dash-grid" style="margin-top:16px">
+      <div class="cs">
+        <div class="cs-head"><div><div class="cs-title">🏆 Ranking de proveedores</div><div class="cs-sub">Top 5 por monto adjudicado</div></div></div>
+        <div style="padding:0 20px 10px" id="trendProvs"></div>
+      </div>
+      <div class="cs">
+        <div class="cs-head"><div><div class="cs-title">📜 Historial de actividad</div><div class="cs-sub">Últimos movimientos registrados</div></div></div>
+        <div style="padding:0 20px 10px" id="actLog"></div>
       </div>
     </div>
   </div>
@@ -821,6 +852,41 @@ table.dt td strong{color:var(--text-1);font-weight:600}
   </div>
 </div>
 
+<!-- MODAL SEGURIDAD -->
+<div class="modal-bg hidden" id="mSeg">
+  <div class="modal">
+    <div class="m-head"><div class="m-title">🔐 Seguridad y aprobador</div><button class="m-close" onclick="cerrarSeg()">✕</button></div>
+    <div class="m-body">
+      <div class="fgrid" style="gap:13px">
+        <div class="fg"><label class="fl">Nombre del aprobador (jefe)</label><input id="segNombre" class="fi" placeholder="Ej. Juan Pérez — Jefe de Mantenimiento" autocomplete="off"></div>
+        <div class="fg"><label class="fl">PIN de aprobación (4-6 dígitos)</label><input id="segPin" class="fi" type="password" inputmode="numeric" maxlength="6" placeholder="Déjalo vacío para no usar PIN" autocomplete="off"></div>
+        <div style="font-size:11.5px;color:var(--text-3);line-height:1.6;background:var(--surface-2);border-radius:var(--r-md);padding:10px 12px">
+          💡 Si configuras un PIN, se pedirá cada vez que se apruebe o rechace una cotización. El nombre aparecerá en el historial y en la orden de compra.
+        </div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="cerrarSeg()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarSeg()">Guardar configuración</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PIN -->
+<div class="modal-bg hidden" id="mPin">
+  <div class="modal" style="max-width:340px">
+    <div class="m-head"><div class="m-title">🔐 PIN requerido</div><button class="m-close" onclick="cancelarPin()">✕</button></div>
+    <div class="m-body">
+      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:10px" id="pinMsg">Ingresa el PIN del aprobador para continuar.</div>
+      <input id="pinInput" class="fi" type="password" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="off" style="text-align:center;font-size:20px;letter-spacing:6px" onkeydown="if(event.key==='Enter')verificarPin()">
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="cancelarPin()">Cancelar</button>
+      <button class="btn btn-primary" onclick="verificarPin()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL COTIZACIÓN -->
 <div class="modal-bg hidden" id="mCot">
   <div class="modal" style="max-width:700px">
@@ -839,6 +905,18 @@ table.dt td strong{color:var(--text-1);font-weight:600}
           <div id="matChip" style="display:none"></div>
         </div>
         <div class="fg span2"><label class="fl">Observaciones generales</label><input id="cotNotas" class="fi" placeholder="Especificaciones, condiciones de entrega, etc. (opcional)" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Moneda</label>
+          <select id="cotMoneda" class="fs fi" onchange="renderTempOfertas();calcOfTotal()">
+            <option value="PEN">S/ — Soles</option>
+            <option value="USD">US$ — Dólares</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">IGV (18%)</label>
+          <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-md);cursor:pointer;font-size:12.5px;color:var(--text-2)">
+            <input type="checkbox" id="cotIgv" onchange="renderTempOfertas()" style="accent-color:var(--brand-500);width:15px;height:15px">
+            Los precios ya incluyen IGV
+          </label>
+        </div>
       </div>
 
       <div class="section-label">🏢 Agregar ofertas de proveedores</div>
@@ -855,6 +933,8 @@ table.dt td strong{color:var(--text-1);font-weight:600}
         <input id="ofQty" type="number" min="1" class="fi of-input-sm" placeholder="Cant." style="font-size:12px">
         <input id="ofPrecio" type="number" min="0" step="0.01" class="fi of-input-sm" placeholder="S/Precio" oninput="calcOfTotal()" style="font-size:12px">
         <div style="font-size:12px;color:var(--text-3);white-space:nowrap;align-self:center">Total: <strong id="ofTotalPrev" style="color:var(--text-1)">S/0.00</strong></div>
+        <button class="btn btn-ghost btn-sm" id="ofAdjBtn" onclick="document.getElementById('ofAdjunto').click()" title="Adjuntar foto de la cotización del proveedor" style="flex-shrink:0">📎</button>
+        <input type="file" id="ofAdjunto" accept="image/*" style="display:none" onchange="cargarAdjunto(event)">
         <button class="btn btn-primary btn-sm" onclick="agregarOfertaTemp()" style="flex-shrink:0;white-space:nowrap">+ Agregar</button>
       </div>
       <div id="tempOfertasList" class="temp-ofertas"></div>
@@ -1086,6 +1166,7 @@ let cotFiltro = "all", cotQ = "", cotDesde = "", cotHasta = "", provQ = "", matQ
 let lastRuc = "", rucTimer;
 let confCb = null;
 let tempOfertas = [];
+let editingCotId = null;
 
 function nextCotId(){
   const nums=cots.map(c=>parseInt(String(c.id))).filter(n=>n>=10000001&&n<=99999999);
@@ -1098,12 +1179,18 @@ function nextRq(){
 }
 function normCots(list){
   return list.map(c=>{
-    if(c.ofertas) return c;
+    if(c.ofertas){
+      // Registros previos a moneda/IGV: asumir IGV incluido para no alterar sus totales
+      if(c.incIgv===undefined) c.incIgv=true;
+      if(!c.moneda) c.moneda="PEN";
+      return c;
+    }
     return {
       id:String(c.id||uid()), rq:c.rq||"", descripcion:c.descripcion||"",
       estado:c.estado||"Pendiente", ts:c.ts||Date.now(), notas:c.notas||"",
+      moneda:"PEN", incIgv:true,
       ofertas:[{id:uid(),proveedor:c.proveedor||"",cantidad:c.cantidad||1,precio:c.precio||0,total:c.total||0,notas:""}],
-      ofertaSeleccionadaId:null
+      ofertaSeleccionadaId:null, historial:[]
     };
   });
 }
@@ -1117,6 +1204,15 @@ const esc = v => String(v||"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">
 const digits = v => String(v||"").replace(/\D/g,"");
 const csvQ = v => `"${String(v??"").replaceAll('"','""')}"`;
 const S = v => `S/${Number(v||0).toLocaleString("es-PE",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const MON = { PEN:"S/", USD:"US$" };
+const fmt = (v,m) => `${MON[m]||"S/"}${Number(v||0).toLocaleString("es-PE",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const IGV = 0.18;
+// Desglose: si incIgv, el total ingresado ya contiene IGV; si no, se agrega.
+function igvDesglose(total,incIgv){
+  if(incIgv){ const sub=total/(1+IGV); return {sub,igv:total-sub,final:total}; }
+  return {sub:total,igv:total*IGV,final:total*(1+IGV)};
+}
+const cotMon = c => c.moneda||"PEN";
 const fDate = ts => { if(!ts) return "—"; return new Date(ts).toLocaleDateString("es-PE",{day:"2-digit",month:"short",year:"2-digit"}); };
 const pNom = p => typeof p==="string"?p:(p?.nombre||"");
 
@@ -1206,20 +1302,31 @@ function cancelConf(){ document.getElementById("confirmDlg").classList.add("hidd
 document.getElementById("confOk").onclick=()=>{ confCb?.(); cancelConf(); };
 
 /* ============================================================ MODALS ============================================================ */
-function abrirMC(){
-  tempOfertas=[];
-  document.getElementById("cotId").value=nextCotId();
-  document.getElementById("rq").value=nextRq();
+function abrirMC(editId){
+  editingCotId=editId?String(editId):null;
+  const c=editingCotId?cots.find(x=>x.id===editingCotId):null;
+  tempOfertas=c?c.ofertas.map(o=>({...o})):[];
+  document.getElementById("cotId").value=c?c.id:nextCotId();
+  document.getElementById("rq").value=c?c.rq:nextRq();
+  document.getElementById("desc").value=c?c.descripcion:"";
+  document.getElementById("cotNotas").value=c?(c.notas||""):"";
+  document.getElementById("cotMoneda").value=c?(c.moneda||"PEN"):"PEN";
+  document.getElementById("cotIgv").checked=c?!!c.incIgv:false;
+  document.querySelector("#mCot .m-title").textContent=c?"Editar cotización":"Nueva cotización";
   renderTempOfertas();
   limpiarOfProv();
-  limpiarMatAC();
+  document.getElementById("matChip").style.display="none";
+  document.getElementById("matDropdown").classList.remove("open");
   document.getElementById("mCot").classList.remove("hidden");
   document.getElementById("desc").focus();
 }
 function cerrarMC(){
   document.getElementById("mCot").classList.add("hidden");
   ["rq","desc","cotNotas","ofQty","ofPrecio"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("cotIgv").checked=false;
+  document.getElementById("cotMoneda").value="PEN";
   tempOfertas=[];
+  editingCotId=null;
   renderTempOfertas();
   limpiarOfProv(); limpiarMatAC();
 }
@@ -1265,7 +1372,31 @@ function eliminarMat(id){
 function calcOfTotal(){
   const q=Number(document.getElementById("ofQty").value)||0;
   const p=Number(document.getElementById("ofPrecio").value)||0;
-  document.getElementById("ofTotalPrev").textContent=S(q*p);
+  const m=document.getElementById("cotMoneda").value;
+  document.getElementById("ofTotalPrev").textContent=fmt(q*p,m);
+}
+let tempAdjunto=null;
+function cargarAdjunto(ev){
+  const file=ev.target.files[0];
+  ev.target.value="";
+  if(!file) return;
+  if(!file.type.startsWith("image/")) return toast("Solo se aceptan imágenes (foto de la cotización).","err");
+  if(file.size>8*1024*1024) return toast("Imagen muy pesada (máx. 8MB).","err");
+  const img=new Image();
+  img.onload=()=>{
+    const MAX=900;
+    const scale=Math.min(1,MAX/Math.max(img.width,img.height));
+    const cv=document.createElement("canvas");
+    cv.width=Math.round(img.width*scale); cv.height=Math.round(img.height*scale);
+    cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+    tempAdjunto=cv.toDataURL("image/jpeg",0.65);
+    URL.revokeObjectURL(img.src);
+    document.getElementById("ofAdjBtn").textContent="📎✓";
+    document.getElementById("ofAdjBtn").style.color="var(--green-700)";
+    toast("Imagen adjuntada a la oferta.","ok");
+  };
+  img.onerror=()=>toast("No se pudo leer la imagen.","err");
+  img.src=URL.createObjectURL(file);
 }
 function agregarOfertaTemp(){
   const prov=document.getElementById("ofProveedor").value;
@@ -1274,12 +1405,23 @@ function agregarOfertaTemp(){
   if(!prov) return toast("Selecciona un proveedor para la oferta.","err");
   if(qty<=0||price<=0) return toast("Ingresa cantidad y precio válidos.","err");
   if(tempOfertas.some(o=>o.proveedor===prov)) return toast("Ese proveedor ya fue agregado.","err");
-  tempOfertas.push({id:uid(),proveedor:prov,cantidad:qty,precio:price,total:qty*price,notas:""});
+  tempOfertas.push({id:uid(),proveedor:prov,cantidad:qty,precio:price,total:qty*price,notas:"",adjunto:tempAdjunto});
+  tempAdjunto=null;
+  const adjBtn=document.getElementById("ofAdjBtn");
+  adjBtn.textContent="📎"; adjBtn.style.color="";
   limpiarOfProv();
   ["ofQty","ofPrecio"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("ofTotalPrev").textContent="S/0.00";
   renderTempOfertas();
   toast(`Oferta de ${prov} agregada.`,"ok");
+}
+function verAdjunto(cotId,ofId){
+  const c=cots.find(x=>x.id===String(cotId));
+  const o=c?.ofertas.find(x=>x.id===ofId);
+  if(!o?.adjunto) return;
+  const w=window.open("","_blank");
+  w.document.write(`<html><head><title>Adjunto — ${esc(o.proveedor)}</title></head><body style="margin:0;background:#111;display:grid;place-items:center;min-height:100vh"><img src="${o.adjunto}" style="max-width:96vw;max-height:96vh;border-radius:8px"></body></html>`);
+  w.document.close();
 }
 function quitarOfertaTemp(idx){
   tempOfertas.splice(idx,1);
@@ -1291,6 +1433,8 @@ function renderTempOfertas(){
     el.innerHTML=`<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-3)">Agrega al menos una oferta de proveedor para continuar.</div>`;
     return;
   }
+  const m=document.getElementById("cotMoneda").value;
+  const incIgv=document.getElementById("cotIgv").checked;
   const sorted=[...tempOfertas].sort((a,b)=>a.total-b.total);
   const bestTotal=sorted[0].total;
   el.innerHTML=tempOfertas.map((o,i)=>{
@@ -1298,11 +1442,15 @@ function renderTempOfertas(){
     const isBest=rank===0;
     const diff=bestTotal>0&&!isBest?`+${(((o.total-bestTotal)/bestTotal)*100).toFixed(1)}%`:"";
     const col=provColor(o.proveedor);
+    const dg=igvDesglose(o.total,incIgv);
     return `<div class="temp-oferta-item" style="${isBest?"border-color:#86efac;background:#f0fdf4":""}">
       <div style="width:24px;height:24px;border-radius:50%;background:${col};display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${provInitial(o.proveedor)}</div>
       <div class="temp-of-prov">${isBest?"🏆 ":""}${esc(o.proveedor)}</div>
-      <div class="temp-of-vals">${o.cantidad} × ${S(o.precio)}</div>
-      <div class="temp-of-total">${S(o.total)}</div>
+      <div class="temp-of-vals">${o.cantidad} × ${fmt(o.precio,m)}</div>
+      <div style="text-align:right">
+        <div class="temp-of-total">${fmt(dg.final,m)}</div>
+        <div style="font-size:9.5px;color:var(--text-3)">inc. IGV ${fmt(dg.igv,m)}</div>
+      </div>
       ${diff?`<span class="comp-diff diff-worst" style="font-size:10px">${diff}</span>`:`<span class="comp-diff diff-best" style="font-size:10px">Mejor</span>`}
       <button class="btn btn-sm btn-ghost" onclick="quitarOfertaTemp(${i})" style="font-size:12px;padding:3px 7px;flex-shrink:0">✕</button>
     </div>`;
@@ -1373,71 +1521,7 @@ const PROV_COLORS=["#3b82f6","#8b5cf6","#ec4899","#f59e0b","#10b981","#06b6d4","
 function provColor(n){let h=0;for(const c of n)h=((h<<5)-h)+c.charCodeAt(0);return PROV_COLORS[Math.abs(h)%PROV_COLORS.length];}
 function provInitial(n){return n.trim().charAt(0).toUpperCase();}
 
-let provAcIndex=-1;
-let provBlurTimer=null;
-
-function onProvSearch(){
-  const q=document.getElementById("provSearch").value.trim().toLowerCase();
-  document.getElementById("proveedor").value="";
-  document.getElementById("provChip").style.display="none";
-  provAcIndex=-1;
-  renderProvDropdown(q);
-}
-function onProvFocus(){
-  const q=document.getElementById("provSearch").value.trim().toLowerCase();
-  renderProvDropdown(q);
-}
-function renderProvDropdown(q){
-  const dd=document.getElementById("provDropdown");
-  const list=q?provs.filter(p=>pNom(p).toLowerCase().includes(q)||(p.ruc||"").includes(q)):provs;
-  if(!list.length){
-    dd.innerHTML=`<div class="prov-empty-msg">${q?"Sin resultados para \""+esc(q)+"\"":"Sin proveedores registrados"}</div>`;
-  } else {
-    dd.innerHTML=list.map((p,i)=>{
-      const nom=pNom(p); const col=provColor(nom);
-      const hl=q?nom.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi"),"<mark style='background:rgba(59,130,246,.18);border-radius:2px;padding:0 1px'>$1</mark>"):esc(nom);
-      return `<div class="prov-item" data-nom="${esc(nom)}" onmousedown="selectProv('${esc(nom).replace(/'/g,"\\'")}')">
-        <div class="prov-avatar" style="background:${col}">${provInitial(nom)}</div>
-        <div class="prov-info"><div class="prov-name">${hl}</div>${p.ruc?`<div class="prov-ruc">RUC ${esc(p.ruc)}</div>`:""}</div>
-        ${p.ruc?`<span class="prov-badge">${esc(p.estado||"Activo")}</span>`:""}
-      </div>`;
-    }).join("");
-  }
-  dd.classList.add("open");
-}
-function onProvKey(e){
-  const dd=document.getElementById("provDropdown");
-  const items=dd.querySelectorAll(".prov-item");
-  if(!items.length) return;
-  if(e.key==="ArrowDown"){e.preventDefault();provAcIndex=Math.min(provAcIndex+1,items.length-1);highlightProvItem(items);}
-  else if(e.key==="ArrowUp"){e.preventDefault();provAcIndex=Math.max(provAcIndex-1,0);highlightProvItem(items);}
-  else if(e.key==="Enter"&&provAcIndex>=0){e.preventDefault();items[provAcIndex].dispatchEvent(new MouseEvent("mousedown"));}
-  else if(e.key==="Escape"){dd.classList.remove("open"); provAcIndex=-1;}
-}
-function highlightProvItem(items){
-  items.forEach((el,i)=>el.classList.toggle("prov-active",i===provAcIndex));
-  items[provAcIndex]?.scrollIntoView({block:"nearest"});
-}
-function selectProv(nom){
-  document.getElementById("proveedor").value=nom;
-  document.getElementById("provSearch").value=nom;
-  document.getElementById("provDropdown").classList.remove("open");
-  provAcIndex=-1;
-  const col=provColor(nom);
-  const chip=document.getElementById("provChip");
-  chip.innerHTML=`<div class="prov-selected-chip"><div class="chip-avatar" style="background:${col}">${provInitial(nom)}</div>${esc(nom)}<span class="chip-clear" onclick="limpiarProvAC()">✕</span></div>`;
-  chip.style.display="block";
-}
-function limpiarProvAC(){
-  document.getElementById("proveedor").value="";
-  document.getElementById("provSearch").value="";
-  document.getElementById("provDropdown").classList.remove("open");
-  document.getElementById("provChip").style.display="none";
-  provAcIndex=-1;
-}
 document.addEventListener("click",e=>{
-  if(!e.target.closest(".prov-ac-wrap")&&!e.target.closest("#provChip"))
-    document.getElementById("provDropdown")?.classList.remove("open");
   if(!e.target.closest(".mat-ac-wrap")&&!e.target.closest("#matChip"))
     document.getElementById("matDropdown")?.classList.remove("open");
   if(!e.target.closest("#ofProvDropdown")&&!e.target.closest("#ofProvSearch")&&!e.target.closest("#ofProvChip"))
@@ -1573,12 +1657,14 @@ async function syncSheetsSilent(){
   } catch(e) { /* silencioso */ }
 }
 
-["mCot","mProv","mSheets","mMat"].forEach(id=>{
+["mCot","mProv","mSheets","mMat","mSeg","mPin"].forEach(id=>{
   document.getElementById(id).addEventListener("click",e=>{
     if(e.target===e.currentTarget){
       if(id==="mCot") cerrarMC();
       else if(id==="mProv") cerrarMP();
       else if(id==="mMat") cerrarMM();
+      else if(id==="mSeg") cerrarSeg();
+      else if(id==="mPin") cancelarPin();
       else cerrarSheets();
     }
   });
@@ -1589,6 +1675,8 @@ document.addEventListener("keydown",e=>{
     if(!document.getElementById("mCot").classList.contains("hidden")) cerrarMC();
     if(!document.getElementById("mProv").classList.contains("hidden")) cerrarMP();
     if(!document.getElementById("mSheets").classList.contains("hidden")) cerrarSheets();
+    if(!document.getElementById("mSeg").classList.contains("hidden")) cerrarSeg();
+    if(!document.getElementById("mPin").classList.contains("hidden")) cancelarPin();
     if(!document.getElementById("confirmDlg").classList.contains("hidden")) cancelConf();
   }
   if((e.ctrlKey||e.metaKey)&&e.key==="n"&&!e.shiftKey){ e.preventDefault(); abrirMC(); }
@@ -1684,25 +1772,83 @@ function eliminarProv(id){
 }
 
 /* ============================================================ COTIZACIONES ============================================================ */
+function histEntry(accion){ return {accion,fecha:Date.now(),por:localStorage.getItem("aprobadorNombre")||"Usuario"}; }
 function guardarCot(){
   const rq=document.getElementById("rq").value.trim();
   const d=document.getElementById("desc").value.trim();
   const notas=document.getElementById("cotNotas").value.trim();
   const id=document.getElementById("cotId").value.trim()||nextCotId();
+  const moneda=document.getElementById("cotMoneda").value;
+  const incIgv=document.getElementById("cotIgv").checked;
   if(!rq||!d) return toast("Completa el código RQ y la descripción.","err");
   if(!tempOfertas.length) return toast("Agrega al menos una oferta de proveedor.","err");
-  cots.unshift({id,rq,descripcion:d,notas,estado:"Pendiente",ts:Date.now(),ofertas:[...tempOfertas],ofertaSeleccionadaId:null});
+  if(editingCotId){
+    const c=cots.find(x=>x.id===editingCotId);
+    if(c){
+      Object.assign(c,{rq,descripcion:d,notas,moneda,incIgv,ofertas:[...tempOfertas]});
+      if(!c.ofertas.some(o=>o.id===c.ofertaSeleccionadaId)) c.ofertaSeleccionadaId=null;
+      (c.historial=c.historial||[]).push(histEntry("Cotización editada"));
+      cerrarMC(); guardar(); toast("Cotización actualizada.","ok");
+      return;
+    }
+  }
+  cots.unshift({id,rq,descripcion:d,notas,moneda,incIgv,estado:"Pendiente",ts:Date.now(),ofertas:[...tempOfertas],ofertaSeleccionadaId:null,historial:[histEntry("Cotización creada")]});
   cerrarMC(); guardar(); toast("Cotización registrada con "+tempOfertas.length+" oferta"+( tempOfertas.length!==1?"s":"")+".","ok");
 }
+/* ===== SEGURIDAD / PIN ===== */
+let pinCb=null;
+function abrirSeguridad(){
+  document.getElementById("segNombre").value=localStorage.getItem("aprobadorNombre")||"";
+  document.getElementById("segPin").value=localStorage.getItem("aprobadorPin")||"";
+  document.getElementById("mSeg").classList.remove("hidden");
+}
+function cerrarSeg(){ document.getElementById("mSeg").classList.add("hidden"); }
+function guardarSeg(){
+  const nombre=document.getElementById("segNombre").value.trim();
+  const pin=document.getElementById("segPin").value.trim();
+  if(pin&&(pin.length<4||!/^\d+$/.test(pin))) return toast("El PIN debe tener 4-6 dígitos numéricos.","err");
+  localStorage.setItem("aprobadorNombre",nombre);
+  if(pin) localStorage.setItem("aprobadorPin",pin); else localStorage.removeItem("aprobadorPin");
+  cerrarSeg(); toast("Configuración de seguridad guardada.","ok");
+}
+function conPin(accion,cb){
+  const pin=localStorage.getItem("aprobadorPin");
+  if(!pin) return cb();
+  pinCb=cb;
+  document.getElementById("pinMsg").textContent=accion;
+  document.getElementById("pinInput").value="";
+  document.getElementById("mPin").classList.remove("hidden");
+  setTimeout(()=>document.getElementById("pinInput").focus(),50);
+}
+function verificarPin(){
+  const ok=document.getElementById("pinInput").value===localStorage.getItem("aprobadorPin");
+  if(!ok){ document.getElementById("pinInput").value=""; return toast("PIN incorrecto.","err"); }
+  document.getElementById("mPin").classList.add("hidden");
+  const cb=pinCb; pinCb=null; cb?.();
+}
+function cancelarPin(){ document.getElementById("mPin").classList.add("hidden"); pinCb=null; }
+
 function aprobarOferta(cotId,ofId){
   const c=cots.find(x=>x.id===cotId); if(!c) return;
   const of=c.ofertas.find(o=>o.id===ofId); if(!of) return;
-  confirmar("¿Aprobar esta oferta?",`Se aprobará la oferta de <strong>${esc(of.proveedor)}</strong> por <strong>${S(of.total)}</strong>.`,()=>{
-    c.estado="Aprobado"; c.ofertaSeleccionadaId=ofId; guardar();
-    toast(`✓ Aprobado: ${of.proveedor} · ${S(of.total)}`,"ok");
+  const dg=igvDesglose(of.total,c.incIgv);
+  confirmar("¿Aprobar esta oferta?",`Se aprobará la oferta de <strong>${esc(of.proveedor)}</strong> por <strong>${fmt(dg.final,cotMon(c))}</strong> (inc. IGV).`,()=>{
+    conPin(`Aprobar oferta de ${of.proveedor} por ${fmt(dg.final,cotMon(c))}`,()=>{
+      c.estado="Aprobado"; c.ofertaSeleccionadaId=ofId;
+      (c.historial=c.historial||[]).push(histEntry(`Aprobado — ${of.proveedor} (${fmt(dg.final,cotMon(c))})`));
+      guardar();
+      toast(`✓ Aprobado: ${of.proveedor} · ${fmt(dg.final,cotMon(c))}`,"ok");
+    });
   });
 }
-function rechazar(cotId){ const c=cots.find(x=>x.id===cotId); if(!c) return; c.estado="Rechazado"; guardar(); toast("Cotización rechazada."); }
+function rechazar(cotId){
+  const c=cots.find(x=>x.id===cotId); if(!c) return;
+  conPin("Rechazar esta cotización completa",()=>{
+    c.estado="Rechazado";
+    (c.historial=c.historial||[]).push(histEntry("Cotización rechazada"));
+    guardar(); toast("Cotización rechazada.");
+  });
+}
 function eliminarCot(id){ id=String(id);
   const c=cots.find(x=>x.id===id); if(!c) return;
   confirmar("¿Eliminar cotización?",`Se eliminará "${c.descripcion}" permanentemente.`,()=>{
@@ -1748,8 +1894,8 @@ function filtrarProv(){ provQ=document.getElementById("srchProv").value.toLowerC
 function renderAll(){ renderKPIs(); renderDash(); renderCots(); renderProvs(); renderMats(); renderAppr(); renderBadges(); }
 
 function renderKPIs(){
-  const ap=cots.filter(x=>x.estado==="Aprobado");
-  const totalAp=ap.reduce((s,c)=>{ const o=cotSelectedOffer(c); return s+(o?.total||0); },0);
+  const ap=cots.filter(x=>POST_APPR.includes(x.estado));
+  const totalAp=ap.reduce((s,c)=>{ const o=cotSelectedOffer(c); if(!o) return s; const dg=igvDesglose(o.total,c.incIgv); return s+(cotMon(c)==="USD"?dg.final*3.75:dg.final); },0);
   const tasa=cots.length?Math.round((ap.length/cots.length)*100):0;
   counter("kpiCot",cots.length);
   document.getElementById("kpiMonto").textContent=S(totalAp);
@@ -1767,7 +1913,7 @@ function counter(id,target){
   requestAnimationFrame(tick);
 }
 function renderDash(){
-  const ap=cots.filter(x=>x.estado==="Aprobado").length;
+  const ap=cots.filter(x=>POST_APPR.includes(x.estado)).length;
   const pe=cots.filter(x=>x.estado==="Pendiente").length;
   const re=cots.filter(x=>x.estado==="Rechazado").length;
   const tot=Math.max(cots.length,1);
@@ -1777,31 +1923,122 @@ function renderDash(){
     {label:"Rechazadas",v:re,color:"#ef4444"},
   ].map(r=>`<div class="chart-row"><div class="chart-label">${r.label}</div><div class="chart-track"><div class="chart-fill" style="width:${(r.v/tot)*100}%;background:${r.color}"></div></div><div class="chart-num">${r.v}</div><div class="chart-pct">${cots.length?Math.round((r.v/cots.length)*100):0}%</div></div>`).join("");
   const feed=document.getElementById("actFeed");
-  if(!cots.length){ feed.innerHTML=`<div class="empty"><div class="empty-icon">✨</div><div class="empty-title">Sin actividad</div><div class="empty-desc">Registra cotizaciones para ver actividad reciente.</div></div>`; return; }
-  const colDot={"Aprobado":"#22c55e","Pendiente":"#f59e0b","Rechazado":"#ef4444"};
-  feed.innerHTML=cots.slice(0,5).map(c=>{ const best=cotBestOffer(c); const sel=cotSelectedOffer(c); return `<div class="act-item"><div class="act-dot" style="background:${colDot[c.estado]||"#94a3b8"}"></div><div class="act-body"><div class="act-title">${esc(c.descripcion)}</div><div class="act-meta">${esc(sel?.proveedor||"")} · ${esc(c.rq)} · ${fDate(c.ts)}</div></div><div class="act-right"><div class="act-amount">${S(sel?.total||0)}</div><div style="margin-top:3px">${bdg(c.estado)}</div></div></div>`; }).join("");
+  if(!cots.length){ feed.innerHTML=`<div class="empty"><div class="empty-icon">✨</div><div class="empty-title">Sin actividad</div><div class="empty-desc">Registra cotizaciones para ver actividad reciente.</div></div>`; }
+  else {
+    const colDot={"Aprobado":"#22c55e","OC Emitida":"#3b82f6","Recibido":"#6366f1","Pagado":"#15803d","Pendiente":"#f59e0b","Rechazado":"#ef4444"};
+    feed.innerHTML=cots.slice(0,5).map(c=>{ const sel=cotSelectedOffer(c); const dg=sel?igvDesglose(sel.total,c.incIgv):null; return `<div class="act-item"><div class="act-dot" style="background:${colDot[c.estado]||"#94a3b8"}"></div><div class="act-body"><div class="act-title">${esc(c.descripcion)}</div><div class="act-meta">${esc(sel?.proveedor||"")} · ${esc(c.rq)} · ${fDate(c.ts)}</div></div><div class="act-right"><div class="act-amount">${dg?fmt(dg.final,cotMon(c)):"—"}</div><div style="margin-top:3px">${bdg(c.estado)}</div></div></div>`; }).join("");
+  }
+  renderTendencias();
+}
+function renderTendencias(){
+  const apr=cots.filter(c=>POST_APPR.includes(c.estado));
+  const valPEN=c=>{ const o=cotSelectedOffer(c); if(!o) return 0; const dg=igvDesglose(o.total,c.incIgv); return cotMon(c)==="USD"?dg.final*3.75:dg.final; };
+
+  // Gasto mensual (últimos 6 meses)
+  const meses=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    meses.push({key:`${d.getFullYear()}-${d.getMonth()}`,label:d.toLocaleDateString("es-PE",{month:"short"}),total:0});
+  }
+  apr.forEach(c=>{
+    const d=new Date(c.ts); const key=`${d.getFullYear()}-${d.getMonth()}`;
+    const m=meses.find(x=>x.key===key); if(m) m.total+=valPEN(c);
+  });
+  const maxM=Math.max(...meses.map(m=>m.total),1);
+  document.getElementById("trendMeses").innerHTML=meses.map(m=>`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+      <div style="font-size:9.5px;font-weight:700;color:var(--text-2)">${m.total?S(m.total).replace("S/","S/ "):""}</div>
+      <div style="width:70%;max-width:34px;height:${Math.max((m.total/maxM)*80,3)}px;background:linear-gradient(180deg,#3b82f6,#1d4ed8);border-radius:5px 5px 2px 2px;transition:height .4s"></div>
+      <div style="font-size:10px;color:var(--text-3);text-transform:capitalize">${m.label}</div>
+    </div>`).join("");
+
+  // Gasto por categoría
+  const porCat={};
+  apr.forEach(c=>{
+    const mat=mats.find(x=>x.nombre.toLowerCase()===c.descripcion.toLowerCase());
+    const cat=mat?.categoria||"Otros";
+    porCat[cat]=(porCat[cat]||0)+valPEN(c);
+  });
+  const cats=Object.entries(porCat).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxC=Math.max(...cats.map(c=>c[1]),1);
+  document.getElementById("trendCats").innerHTML=cats.length?cats.map(([cat,v])=>{
+    const cs=catStyle(cat);
+    return `<div class="chart-row"><div class="chart-label" style="display:flex;align-items:center;gap:5px">${cs.icon} ${esc(cat)}</div><div class="chart-track"><div class="chart-fill" style="width:${(v/maxC)*100}%;background:${cs.color}"></div></div><div class="chart-num" style="min-width:74px;text-align:right">${S(v)}</div></div>`;
+  }).join(""):`<div style="text-align:center;padding:16px;font-size:12px;color:var(--text-3)">Aprueba cotizaciones para ver el gasto por categoría.</div>`;
+
+  // Ranking proveedores
+  const ranking={};
+  apr.forEach(c=>{
+    const o=cotSelectedOffer(c); if(!o) return;
+    if(!ranking[o.proveedor]) ranking[o.proveedor]={wins:0,total:0};
+    ranking[o.proveedor].wins++; ranking[o.proveedor].total+=valPEN(c);
+  });
+  const top=Object.entries(ranking).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+  const medals=["🥇","🥈","🥉","4°","5°"];
+  document.getElementById("trendProvs").innerHTML=top.length?top.map(([nom,r],i)=>`
+    <div class="act-item">
+      <div style="font-size:16px;width:26px;text-align:center">${medals[i]}</div>
+      <div style="width:26px;height:26px;border-radius:50%;background:${provColor(nom)};display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${provInitial(nom)}</div>
+      <div class="act-body"><div class="act-title">${esc(nom)}</div><div class="act-meta">${r.wins} adjudicación${r.wins!==1?"es":""}</div></div>
+      <div class="act-amount">${S(r.total)}</div>
+    </div>`).join(""):`<div style="text-align:center;padding:16px;font-size:12px;color:var(--text-3)">Sin adjudicaciones aún.</div>`;
+
+  // Log de actividad global
+  const eventos=cots.flatMap(c=>(c.historial||[]).map(h=>({...h,rq:c.rq,desc:c.descripcion})));
+  eventos.sort((a,b)=>b.fecha-a.fecha);
+  const iconAcc=a=>a.startsWith("Aprobado")?"✅":a.includes("rechazada")?"❌":a.includes("editada")?"✏️":a.startsWith("Estado")?"🔄":"🆕";
+  document.getElementById("actLog").innerHTML=eventos.length?eventos.slice(0,8).map(h=>`
+    <div class="act-item">
+      <div style="font-size:14px;width:24px;text-align:center">${iconAcc(h.accion)}</div>
+      <div class="act-body">
+        <div class="act-title" style="font-size:12px">${esc(h.accion)}</div>
+        <div class="act-meta">${esc(h.rq)} · ${esc(h.desc)} · ${esc(h.por)}</div>
+      </div>
+      <div style="font-size:10.5px;color:var(--text-3);white-space:nowrap">${new Date(h.fecha).toLocaleDateString("es-PE",{day:"2-digit",month:"short"})} ${new Date(h.fecha).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</div>
+    </div>`).join(""):`<div style="text-align:center;padding:16px;font-size:12px;color:var(--text-3)">Los movimientos aparecerán aquí.</div>`;
+}
+const POST_APPR=["Aprobado","OC Emitida","Recibido","Pagado"];
+const NEXT_STATE={"Aprobado":"OC Emitida","OC Emitida":"Recibido","Recibido":"Pagado"};
+const NEXT_LABEL={"Aprobado":"📑 Emitir OC","OC Emitida":"📦 Recibido","Recibido":"💵 Pagado"};
+function avanzarEstado(id){
+  const c=cots.find(x=>x.id===String(id)); if(!c) return;
+  const next=NEXT_STATE[c.estado]; if(!next) return;
+  if(next==="OC Emitida"&&!c.ocNum){
+    const nums=cots.map(x=>parseInt((x.ocNum||"").replace(/\D/g,""))).filter(n=>n>0);
+    c.ocNum="OC-"+String(nums.length?Math.max(...nums)+1:1).padStart(4,"0");
+  }
+  c.estado=next;
+  (c.historial=c.historial||[]).push(histEntry("Estado → "+next));
+  guardar(); toast(`Estado actualizado: ${next}.`,"ok");
 }
 function renderCots(){
   const tb=document.getElementById("tbCot");
   let list=cots;
-  if(cotFiltro!=="all") list=list.filter(c=>c.estado===cotFiltro);
+  if(cotFiltro!=="all"){
+    if(cotFiltro==="Aprobado") list=list.filter(c=>POST_APPR.includes(c.estado));
+    else list=list.filter(c=>c.estado===cotFiltro);
+  }
   if(cotQ) list=list.filter(c=>c.descripcion.toLowerCase().includes(cotQ)||(c.ofertas||[]).some(o=>o.proveedor.toLowerCase().includes(cotQ))||c.rq.toLowerCase().includes(cotQ));
   list=applyDateFilter(list);
   if(!list.length){ tb.innerHTML=`<tr><td colspan="9"><div class="empty"><div class="empty-icon">🧾</div><div class="empty-title">${cots.length?"Sin resultados":"Sin cotizaciones"}</div><div class="empty-desc">${cots.length?"Cambia el filtro o búsqueda.":"Crea tu primera cotización para empezar."}</div></div></td></tr>`; return; }
   tb.innerHTML=list.map(c=>{
-    const sel=cotSelectedOffer(c); const best=cotBestOffer(c);
+    const sel=cotSelectedOffer(c);
     const nOfs=c.ofertas?.length||0;
-    const provCell=c.estado==="Aprobado"&&sel?`<div style="font-size:12.5px;font-weight:600">${esc(sel.proveedor)}</div><div style="font-size:10px;color:var(--text-3)">Aprobado</div>`:nOfs>1?`<span style="font-size:11px;font-weight:600;background:var(--brand-50);color:var(--brand-600);padding:2px 8px;border-radius:99px;border:1px solid var(--brand-200)">${nOfs} ofertas</span>`:esc(sel?.proveedor||"");
+    const isAp=POST_APPR.includes(c.estado);
+    const dg=sel?igvDesglose(sel.total,c.incIgv):null;
+    const provCell=isAp&&sel?`<div style="font-size:12.5px;font-weight:600">${esc(sel.proveedor)}</div><div style="font-size:10px;color:var(--text-3)">${c.ocNum?esc(c.ocNum):"Ganador"}</div>`:nOfs>1?`<span style="font-size:11px;font-weight:600;background:var(--brand-50);color:var(--brand-600);padding:2px 8px;border-radius:99px;border:1px solid var(--brand-200)">${nOfs} ofertas</span>`:esc(sel?.proveedor||"");
     return `<tr>
       <td><span class="id-tag">${esc(String(c.id))}</span></td>
       <td><strong>${esc(c.rq)}</strong></td>
       <td style="max-width:180px"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.descripcion)}">${esc(c.descripcion)}</div></td>
       <td>${provCell}</td>
-      <td>${sel?S(sel.total):"—"}</td>
+      <td>${dg?`<strong>${fmt(dg.final,cotMon(c))}</strong><div style="font-size:9.5px;color:var(--text-3)">inc. IGV</div>`:"—"}</td>
       <td>${bdg(c.estado)}</td>
       <td style="font-size:11px;color:var(--text-3);white-space:nowrap">${fDate(c.ts)}</td>
-      <td><div style="display:flex;gap:5px;align-items:center">
-        ${c.estado==="Pendiente"?`<button class="btn btn-sm btn-ghost" onclick="nav('aprobaciones')" title="Ver ofertas" style="font-size:11px">👁 Ver</button>`:""}
+      <td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+        ${c.estado==="Pendiente"?`<button class="btn btn-sm btn-ghost" onclick="abrirMC('${esc(String(c.id))}')" title="Editar" style="font-size:12px">✏️</button><button class="btn btn-sm btn-ghost" onclick="nav('aprobaciones')" title="Ver ofertas" style="font-size:11px">👁 Ver</button>`:""}
+        ${NEXT_STATE[c.estado]?`<button class="btn btn-sm btn-success" onclick="avanzarEstado('${esc(String(c.id))}')" style="font-size:10.5px;white-space:nowrap">${NEXT_LABEL[c.estado]}</button>`:""}
+        ${isAp?`<button class="btn btn-sm btn-ghost" onclick="generarOC('${esc(String(c.id))}')" title="Ver orden de compra PDF" style="font-size:12px">📄</button>`:""}
         <button class="btn btn-sm btn-ghost" onclick="eliminarCot('${esc(String(c.id))}')" title="Eliminar" style="font-size:13px">🗑</button>
       </div></td>
     </tr>`;
@@ -1823,28 +2060,30 @@ function renderAppr(){
   const list=document.getElementById("apprList");
   const badge=document.getElementById("pendBadge");
   const pend=cots.filter(c=>c.estado==="Pendiente");
-  const appr=cots.filter(c=>c.estado==="Aprobado");
+  const appr=cots.filter(c=>POST_APPR.includes(c.estado));
   badge.style.display=pend.length?"inline-flex":"none";
   badge.textContent=`${pend.length} pendiente${pend.length!==1?"s":""}`;
   if(!pend.length&&!appr.length){ list.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">¡Todo al día!</div><div class="empty-desc">No hay cotizaciones pendientes de aprobación.</div></div>`; return; }
 
   const renderComp=(c)=>{
+    const m=cotMon(c);
     const ofs=[...c.ofertas].sort((a,b)=>a.total-b.total);
     const bestTotal=ofs[0]?.total||0;
     return `
       <div class="comp-section">
-        <div class="comp-header"><span>Proveedor</span><span>Cant.</span><span>P. Unit.</span><span>Total</span><span></span><span>Diferencia</span><span>Acción</span></div>
+        <div class="comp-header"><span>Proveedor</span><span>Cant.</span><span>P. Unit.</span><span>Total inc. IGV</span><span></span><span>Diferencia</span><span>Acción</span></div>
         ${ofs.map((o,i)=>{
           const isBest=i===0, isWorst=i===ofs.length-1&&ofs.length>1;
           const diffPct=bestTotal>0&&!isBest?`+${(((o.total-bestTotal)/bestTotal)*100).toFixed(1)}%`:"";
           const rowCls=isBest?"best-row":isWorst&&ofs.length>1?"worst-row":"";
           const diffBadge=isBest?`<span class="comp-diff diff-best">🏆 Mejor</span>`:isWorst&&ofs.length>1?`<span class="comp-diff diff-worst">${diffPct}</span>`:`<span class="comp-diff diff-mid">${diffPct}</span>`;
+          const dg=igvDesglose(o.total,c.incIgv);
           return `<div class="comp-offer-row ${rowCls}">
             <div class="comp-prov"><div style="width:22px;height:22px;border-radius:50%;background:${provColor(o.proveedor)};display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">${provInitial(o.proveedor)}</div>${esc(o.proveedor)}</div>
             <div class="comp-num">${o.cantidad}</div>
-            <div class="comp-num">${S(o.precio)}</div>
-            <div class="comp-total-val" style="color:${isBest?"#166534":"var(--text-1)"}">${S(o.total)}</div>
-            <div></div>
+            <div class="comp-num">${fmt(o.precio,m)}</div>
+            <div class="comp-total-val" style="color:${isBest?"#166534":"var(--text-1)"}">${fmt(dg.final,m)}</div>
+            <div>${o.adjunto?`<span style="cursor:pointer;font-size:13px" onclick="verAdjunto('${esc(String(c.id))}','${esc(o.id)}')" title="Ver cotización adjunta">📎</span>`:""}</div>
             <div>${diffBadge}</div>
             <div>${c.estado==="Pendiente"?`<button class="btn btn-success btn-sm" onclick="aprobarOferta('${esc(String(c.id))}','${esc(o.id)}')" style="font-size:11px;padding:4px 10px">✓ Aprobar</button>`:""}</div>
           </div>`;
@@ -1855,43 +2094,61 @@ function renderAppr(){
   let html="";
   if(pend.length){
     html+=`<div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">⏳ Pendientes de aprobación (${pend.length})</div>`;
-    html+=pend.map(c=>`
+    html+=pend.map(c=>{
+      const bdg2=cotBestOffer(c)?igvDesglose(cotBestOffer(c).total,c.incIgv):null;
+      return `
       <div class="appr-card-v2">
         <div class="appr-card-v2-head">
           <div>
-            <div class="appr-id-v2">${esc(String(c.id))} · ${esc(c.rq)} · ${fDate(c.ts)}</div>
+            <div class="appr-id-v2">${esc(String(c.id))} · ${esc(c.rq)} · ${fDate(c.ts)} · ${cotMon(c)==="USD"?"💵 Dólares":"Soles"}</div>
             <div class="appr-desc-v2">${esc(c.descripcion)}</div>
             ${c.notas?`<div class="appr-meta-v2">💬 ${esc(c.notas)}</div>`:""}
-            <div class="appr-meta-v2">${c.ofertas.length} oferta${c.ofertas.length!==1?"s":" recibida"} · Mejor: ${S(cotBestOffer(c)?.total||0)} (${esc(cotBestOffer(c)?.proveedor||"")})</div>
+            <div class="appr-meta-v2">${c.ofertas.length} oferta${c.ofertas.length!==1?"s":" recibida"} · Mejor: ${bdg2?fmt(bdg2.final,cotMon(c)):"—"} (${esc(cotBestOffer(c)?.proveedor||"")})</div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="rechazar('${esc(String(c.id))}')" style="color:var(--red-500);flex-shrink:0">✕ Rechazar todo</button>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-ghost btn-sm" onclick="abrirMC('${esc(String(c.id))}')" style="font-size:11px">✏️ Editar</button>
+            <button class="btn btn-ghost btn-sm" onclick="rechazar('${esc(String(c.id))}')" style="color:var(--red-500)">✕ Rechazar todo</button>
+          </div>
         </div>
         ${renderComp(c)}
-      </div>`).join("");
+      </div>`;}).join("");
   }
   if(appr.length){
     html+=`<div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">✅ Aprobadas recientemente (${appr.length})</div>`;
     html+=appr.slice(0,5).map(c=>{
       const sel=cotSelectedOffer(c);
+      const m=cotMon(c);
+      const dgSel=sel?igvDesglose(sel.total,c.incIgv):null;
+      const apEntry=(c.historial||[]).find(h=>h.accion.startsWith("Aprobado"));
       const losers=(c.ofertas||[]).filter(o=>o.id!==sel?.id);
       const losersHtml=losers.length?`
         <div class="losing-offers">
           <div class="losing-title">❌ No seleccionados (${losers.length})</div>
           ${losers.map(o=>{
+            const dg=igvDesglose(o.total,c.incIgv);
             const diffPct=sel&&sel.total>0?`+${(((o.total-sel.total)/sel.total)*100).toFixed(1)}% sobre ganador`:"";
             return `<div class="losing-row">
               <div style="width:20px;height:20px;border-radius:50%;background:${provColor(o.proveedor)};display:grid;place-items:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${provInitial(o.proveedor)}</div>
               <div class="losing-prov">${esc(o.proveedor)}</div>
-              <div class="losing-vals">${o.cantidad} und × ${S(o.precio)}</div>
-              <div class="losing-vals"><strong>${S(o.total)}</strong></div>
+              <div class="losing-vals">${o.cantidad} und × ${fmt(o.precio,m)}</div>
+              <div class="losing-vals"><strong>${fmt(dg.final,m)}</strong></div>
               ${diffPct?`<span class="losing-diff">${diffPct}</span>`:""}
             </div>`;
           }).join("")}
         </div>`:"";
       return `<div class="appr-card-v2" style="border-color:#86efac">
-        <div class="appr-id-v2">${esc(String(c.id))} · ${esc(c.rq)} · ${fDate(c.ts)}</div>
-        <div class="appr-desc-v2">${esc(c.descripcion)}</div>
-        ${sel?`<div class="appr-winner-badge">🏆 ${esc(sel.proveedor)} · ${S(sel.total)} · ${sel.cantidad} und × ${S(sel.precio)}</div>`:""}
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div>
+            <div class="appr-id-v2">${esc(String(c.id))} · ${esc(c.rq)} ${c.ocNum?`· ${esc(c.ocNum)}`:""} · ${fDate(c.ts)}</div>
+            <div class="appr-desc-v2">${esc(c.descripcion)}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            ${bdg(c.estado)}
+            <button class="btn btn-ghost btn-sm" onclick="generarOC('${esc(String(c.id))}')" title="Orden de compra PDF" style="font-size:11px">📄 OC</button>
+          </div>
+        </div>
+        ${sel&&dgSel?`<div class="appr-winner-badge">🏆 ${esc(sel.proveedor)} · ${fmt(dgSel.final,m)} inc. IGV · ${sel.cantidad} und × ${fmt(sel.precio,m)}</div>`:""}
+        ${apEntry?`<div class="appr-meta-v2" style="margin-top:6px">✍️ ${esc(apEntry.por)} · ${new Date(apEntry.fecha).toLocaleString("es-PE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:""}
         ${losersHtml}
       </div>`;
     }).join("");
@@ -1937,8 +2194,103 @@ function renderMats(){
   }).join("");
 }
 function bdg(estado){
-  const cls=estado==="Aprobado"?"b-approved":estado==="Rechazado"?"b-rejected":"b-pending";
-  return `<span class="badge ${cls}">${estado}</span>`;
+  const styles={
+    "Aprobado":  "background:#dcfce7;color:#166534;border-color:#86efac",
+    "OC Emitida":"background:#dbeafe;color:#1e40af;border-color:#93c5fd",
+    "Recibido":  "background:#e0e7ff;color:#3730a3;border-color:#a5b4fc",
+    "Pagado":    "background:#f0fdf4;color:#15803d;border-color:#4ade80",
+    "Rechazado": "background:#fee2e2;color:#991b1b;border-color:#fca5a5",
+    "Pendiente": "background:#fef9c3;color:#713f12;border-color:#fde047",
+  };
+  const icons={"Aprobado":"✓","OC Emitida":"📑","Recibido":"📦","Pagado":"💵","Rechazado":"✕","Pendiente":"⏳"};
+  return `<span class="badge" style="border:1px solid;${styles[estado]||styles["Pendiente"]}">${icons[estado]||""} ${estado}</span>`;
+}
+
+/* ============================================================ ORDEN DE COMPRA PDF ============================================================ */
+function generarOC(id){
+  const c=cots.find(x=>x.id===String(id)); if(!c) return;
+  const sel=cotSelectedOffer(c);
+  if(!sel) return toast("Esta cotización no tiene oferta aprobada.","err");
+  const p=provs.find(x=>pNom(x)===sel.proveedor)||{};
+  const dg=igvDesglose(sel.total,c.incIgv);
+  const m=cotMon(c);
+  const mat=mats.find(x=>x.nombre.toLowerCase()===c.descripcion.toLowerCase());
+  const aprobador=localStorage.getItem("aprobadorNombre")||"_______________";
+  const apEntry=(c.historial||[]).find(h=>h.accion.startsWith("Aprobado"));
+  const w=window.open("","_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${c.ocNum||"Orden de Compra"} — ${esc(c.rq)}</title>
+<style>
+  body{font-family:'Segoe UI',Arial,sans-serif;color:#1e293b;max-width:800px;margin:0 auto;padding:36px 40px;font-size:13px}
+  .oc-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1d4ed8;padding-bottom:16px;margin-bottom:20px}
+  .oc-title{font-size:24px;font-weight:800;color:#1d4ed8;letter-spacing:-.5px}
+  .oc-num{font-size:15px;font-weight:700;color:#334155;margin-top:4px}
+  .oc-co{text-align:right;font-size:12px;color:#64748b;line-height:1.6}
+  .oc-co strong{font-size:14px;color:#1e293b}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+  .box{border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px}
+  .box-lbl{font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:.05em;margin-bottom:6px}
+  .box div{line-height:1.7}
+  table{width:100%;border-collapse:collapse;margin:14px 0}
+  th{background:#1d4ed8;color:#fff;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+  td{border:1px solid #e2e8f0;padding:9px 10px}
+  .tot-row td{border:none;padding:4px 10px;text-align:right}
+  .tot-final td{font-size:16px;font-weight:800;color:#1d4ed8;border-top:2px solid #1d4ed8}
+  .firmas{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:70px;text-align:center}
+  .firma{border-top:1.5px solid #94a3b8;padding-top:8px;font-size:11px;color:#64748b}
+  .meta{font-size:10px;color:#94a3b8;margin-top:30px;text-align:center}
+  @media print{body{padding:10px 20px}}
+</style></head><body>
+<div class="oc-head">
+  <div>
+    <div class="oc-title">ORDEN DE COMPRA</div>
+    <div class="oc-num">${c.ocNum||"(Pre-aprobación)"} &nbsp;·&nbsp; ${esc(c.rq)}</div>
+  </div>
+  <div class="oc-co">
+    <strong>🏨 Hotel — Área de Mantenimiento</strong><br>
+    Fecha de emisión: ${new Date().toLocaleDateString("es-PE",{day:"2-digit",month:"long",year:"numeric"})}<br>
+    Cotización N° ${esc(String(c.id))}
+  </div>
+</div>
+<div class="grid2">
+  <div class="box">
+    <div class="box-lbl">Proveedor</div>
+    <div><strong>${esc(sel.proveedor)}</strong><br>
+    ${p.ruc?`RUC: ${esc(p.ruc)}<br>`:""}
+    ${p.direccion?`${esc(p.direccion)}<br>`:""}
+    ${[p.distrito,p.provincia,p.departamento].filter(Boolean).join(" / ")}</div>
+  </div>
+  <div class="box">
+    <div class="box-lbl">Condiciones</div>
+    <div>Moneda: <strong>${m==="USD"?"Dólares americanos":"Soles peruanos"}</strong><br>
+    Estado: <strong>${esc(c.estado)}</strong><br>
+    ${apEntry?`Aprobado el: ${new Date(apEntry.fecha).toLocaleDateString("es-PE")}<br>`:""}
+    ${c.notas?`Obs.: ${esc(c.notas)}`:""}</div>
+  </div>
+</div>
+<table>
+  <tr><th>Código</th><th>Descripción</th><th style="text-align:right">Cantidad</th><th>Unidad</th><th style="text-align:right">P. Unitario</th><th style="text-align:right">Importe</th></tr>
+  <tr>
+    <td>${mat?esc(mat.codigo):"—"}</td>
+    <td><strong>${esc(c.descripcion)}</strong></td>
+    <td style="text-align:right">${sel.cantidad}</td>
+    <td>${mat?esc(mat.unidad):"Unidad"}</td>
+    <td style="text-align:right">${fmt(sel.precio,m)}</td>
+    <td style="text-align:right"><strong>${fmt(sel.total,m)}</strong></td>
+  </tr>
+</table>
+<table style="width:300px;margin-left:auto">
+  <tr class="tot-row"><td>Subtotal:</td><td style="text-align:right">${fmt(dg.sub,m)}</td></tr>
+  <tr class="tot-row"><td>IGV (18%):</td><td style="text-align:right">${fmt(dg.igv,m)}</td></tr>
+  <tr class="tot-row tot-final"><td>TOTAL:</td><td style="text-align:right">${fmt(dg.final,m)}</td></tr>
+</table>
+<div class="firmas">
+  <div class="firma"><strong>${esc(aprobador)}</strong><br>Aprobado por — Jefatura</div>
+  <div class="firma"><strong>${esc(sel.proveedor)}</strong><br>Conformidad del proveedor</div>
+</div>
+<div class="meta">Documento generado por Cotizador Pro · ${new Date().toLocaleString("es-PE")} · Usa Ctrl+P para guardar como PDF</div>
+<script>setTimeout(()=>window.print(),400)<\/script>
+</body></html>`);
+  w.document.close();
 }
 
 /* ============================================================ EXPORTS ============================================================ */
@@ -1947,26 +2299,33 @@ function exportarExcel(){
   if(cotQ) list=list.filter(c=>c.descripcion.toLowerCase().includes(cotQ)||(c.ofertas||[]).some(o=>o.proveedor.toLowerCase().includes(cotQ))||c.rq.toLowerCase().includes(cotQ));
   if(!list.length) return toast("No hay datos para exportar.","err");
 
-  const stCol={"Aprobado":"#dcfce7","Rechazado":"#fee2e2","Pendiente":"#fef9c3"};
+  const stCol={"Aprobado":"#dcfce7","OC Emitida":"#dbeafe","Recibido":"#e0e7ff","Pagado":"#f0fdf4","Rechazado":"#fee2e2","Pendiente":"#fef9c3"};
   const hdr=`<tr style="background:#1d4ed8;color:#fff;font-weight:bold">
-    <th>ID Cotización</th><th>Código RQ</th><th>Descripción</th><th>Proveedor</th>
-    <th>Cantidad</th><th>Precio Unit.</th><th>Total</th><th>Ganadora</th><th>Estado Cot.</th><th>Fecha</th><th>Notas</th>
+    <th>ID Cotización</th><th>Código RQ</th><th>N° OC</th><th>Descripción</th><th>Proveedor</th>
+    <th>Cantidad</th><th>Moneda</th><th>Precio Unit.</th><th>Subtotal</th><th>IGV 18%</th><th>Total</th><th>Ganadora</th><th>Estado Cot.</th><th>Fecha</th><th>Notas</th>
   </tr>`;
 
   const rows=list.flatMap(c=>{
+    const m=cotMon(c);
     const ofs=[...( c.ofertas||[])].sort((a,b)=>a.total-b.total);
     const bestTotal=ofs[0]?.total||0;
     const bg=stCol[c.estado]||"#fff";
+    const isAp=POST_APPR.includes(c.estado);
     return ofs.map((o,i)=>{
-      const isWin=c.ofertaSeleccionadaId===o.id||(i===0&&!c.ofertaSeleccionadaId&&c.estado==="Aprobado");
-      const rowBg=isWin&&c.estado==="Aprobado"?"#bbf7d0":i===0&&c.estado!=="Rechazado"?"#f0fdf4":bg;
+      const isWin=c.ofertaSeleccionadaId===o.id||(i===0&&!c.ofertaSeleccionadaId&&isAp);
+      const rowBg=isWin&&isAp?"#bbf7d0":i===0&&c.estado!=="Rechazado"?"#f0fdf4":bg;
       const diff=bestTotal>0&&i>0?`+${(((o.total-bestTotal)/bestTotal)*100).toFixed(1)}%`:"";
+      const dg=igvDesglose(o.total,c.incIgv);
+      const mp=MON[m]||"S/";
       return `<tr style="background:${rowBg}">
-        <td>${c.id}</td><td>${esc(c.rq)}</td><td>${esc(c.descripcion)}</td>
+        <td>${c.id}</td><td>${esc(c.rq)}</td><td>${esc(c.ocNum||"")}</td><td>${esc(c.descripcion)}</td>
         <td>${esc(o.proveedor)}</td><td style="text-align:right">${o.cantidad}</td>
-        <td style="text-align:right">S/${o.precio.toFixed(2)}</td>
-        <td style="text-align:right;font-weight:bold">S/${o.total.toFixed(2)}</td>
-        <td style="text-align:center;font-weight:bold">${isWin&&c.estado==="Aprobado"?"✓ SÍ":diff||"—"}</td>
+        <td style="text-align:center">${m}</td>
+        <td style="text-align:right">${mp}${o.precio.toFixed(2)}</td>
+        <td style="text-align:right">${mp}${dg.sub.toFixed(2)}</td>
+        <td style="text-align:right">${mp}${dg.igv.toFixed(2)}</td>
+        <td style="text-align:right;font-weight:bold">${mp}${dg.final.toFixed(2)}</td>
+        <td style="text-align:center;font-weight:bold">${isWin&&isAp?"✓ SÍ":diff||"—"}</td>
         <td>${esc(c.estado)}</td>
         <td>${fDate(c.ts)}</td><td>${esc(c.notas||"")}</td>
       </tr>`;
@@ -2005,10 +2364,40 @@ function exportarJSON(){
   dl(JSON.stringify({provs,cots,mats,exportadoEn:new Date().toISOString(),version:"2.1"},null,2),`backup_${Date.now()}.json`,"application/json");
   toast("Backup generado.","ok");
 }
+function importarJSON(ev){
+  const file=ev.target.files[0];
+  ev.target.value="";
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.provs&&!data.cots&&!data.mats) throw new Error("Formato inválido");
+      const nP=(data.provs||[]).length, nC=(data.cots||[]).length, nM=(data.mats||[]).length;
+      confirmar("¿Restaurar backup?",
+        `Se reemplazarán los datos actuales por:<br><strong>${nP} proveedores · ${nC} cotizaciones · ${nM} materiales</strong><br><br>⚠️ Esta acción no se puede deshacer.`,
+        ()=>{
+          provs=normProv(data.provs||[]);
+          cots=normCots(data.cots||[]);
+          mats=data.mats||[];
+          guardar();
+          toast("Backup restaurado correctamente.","ok");
+        });
+    }catch(err){
+      toast("Archivo inválido. Usa un backup JSON generado por esta app.","err");
+    }
+  };
+  reader.readAsText(file);
+}
 function dl(content,name,type){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([content],{type})); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
 
 /* ============================================================ INIT ============================================================ */
 initTheme(); cargar(); renderAll(); metaUpdate();
+
+// PWA: instalable y funcional sin conexión
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js").catch(()=>{/* file:// o contexto sin soporte */});
+}
 </script>
 </body>
 </html>

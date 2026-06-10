@@ -1,0 +1,20 @@
+{
+  "name": "Cotizador Pro — Mantenimiento",
+  "short_name": "Cotizador Pro",
+  "description": "Gestión de cotizaciones, proveedores y materiales de mantenimiento",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eff6ff",
+  "theme_color": "#1d4ed8",
+  "lang": "es-PE",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
