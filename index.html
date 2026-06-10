@@ -994,10 +994,12 @@ table.dt td strong{color:var(--text-1);font-weight:600}
         <input id="sheetsUrl" class="fi" placeholder="https://script.google.com/macros/s/..." autocomplete="off">
         <div class="fh">Pega aquí la URL de tu Web App de Google Apps Script.</div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:20px">
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <button class="btn btn-sheets" onclick="syncSheets()">📤 Sincronizar ahora</button>
+        <button class="btn btn-ghost" onclick="importarDesdeSheets()">📥 Cargar desde Sheets</button>
         <button class="btn btn-ghost btn-sm" onclick="guardarUrlSheets()">💾 Guardar URL</button>
       </div>
+      <div class="fh" style="margin-bottom:12px">📤 Envía tus datos locales a la hoja. 📥 Trae proveedores, materiales y cotizaciones desde tu hoja (reemplaza los datos locales).</div>
       <div id="sheetsStatus" class="sync-status" style="display:none"></div>
 
       <!-- Instructions -->
@@ -1067,9 +1069,9 @@ const DEFAULT_MATS = [
 const RUC_API = "https://graphperu.daustinn.com/api/query/";
 const DEFAULT_PROV = ["Proveedor estratégico","Servicios Andinos","Suministros Lima"];
 
-const APPS_SCRIPT_CODE = `// ===== COTIZADOR PRO — Google Apps Script v3 =====
+const APPS_SCRIPT_CODE = `// ===== COTIZADOR PRO — Google Apps Script v4 =====
 // Pega este código en script.google.com y despliégalo como Web App
-// v3: moneda PEN/USD, desglose IGV, N° OC y estados post-aprobación
+// v4: doGet ahora devuelve proveedores, materiales y cotizaciones (sincronización Sheets -> App)
 
 const SHEET_ID = "10ANYR73uWLGa0mmGFuPs3Xmzv8_YNZX88LcqT-hDcsQ";
 const IGV = 0.18;
@@ -1086,6 +1088,77 @@ function doPost(e) {
   } catch(err) {
     return ok("Error: " + err.toString());
   }
+}
+
+function doGet(e) {
+  try {
+    const accion = (e && e.parameter) ? e.parameter.action : "";
+    if (accion === "data") {
+      const ss = SpreadsheetApp.openById(SHEET_ID);
+      return okData({
+        proveedores: leerProveedores(ss),
+        materiales: leerMateriales(ss),
+        cotizaciones: leerCotizaciones(ss)
+      });
+    }
+    return ok("Cotizador Pro API v4 activa");
+  } catch(err) {
+    return ok("Error: " + err.toString());
+  }
+}
+
+function leerProveedores(ss) {
+  const sh = ss.getSheetByName("Proveedores");
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2,1,sh.getLastRow()-1,9).getValues()
+    .filter(r => r[0] || r[2])
+    .map(r => ({
+      id: String(r[0]||Utilities.getUuid()), ruc: String(r[1]||""), nombre: String(r[2]||""),
+      direccion: String(r[3]||""), estado: String(r[4]||""), condicion: String(r[5]||""),
+      distrito: String(r[6]||""), provincia: String(r[7]||""), departamento: String(r[8]||""),
+      fuente: "Sheets", ts: Date.now()
+    }));
+}
+
+function leerMateriales(ss) {
+  const sh = ss.getSheetByName("Materiales");
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2,1,sh.getLastRow()-1,6).getValues()
+    .filter(r => r[0] || r[1])
+    .map(r => ({
+      codigo: String(r[0]||""), nombre: String(r[1]||""), categoria: String(r[2]||"Otros"),
+      unidad: String(r[3]||"Unidad"), descripcion: String(r[4]||""), ts: Date.now()
+    }));
+}
+
+function leerCotizaciones(ss) {
+  const shC = ss.getSheetByName("Cotizaciones");
+  if (!shC || shC.getLastRow() < 2) return [];
+  const shO = ss.getSheetByName("Ofertas");
+  const cRows = shC.getRange(2,1,shC.getLastRow()-1,13).getValues();
+  const oRows = (shO && shO.getLastRow() > 1) ? shO.getRange(2,1,shO.getLastRow()-1,10).getValues() : [];
+  return cRows.filter(r => r[0]).map(r => {
+    const id = String(r[0]);
+    const ofertas = oRows.filter(o => String(o[0]) === id).map(o => ({
+      id: Utilities.getUuid(), proveedor: String(o[3]||""), cantidad: Number(o[4]||1),
+      precio: Number(o[5]||0), total: Number(o[6]||0), notas: ""
+    }));
+    if (!ofertas.length && r[4]) {
+      ofertas.push({id: Utilities.getUuid(), proveedor: String(r[4]||""), cantidad: 1,
+        precio: Number(r[8]||0), total: Number(r[8]||0), notas: ""});
+    }
+    const ganador = String(r[4]||"");
+    const sel = ofertas.find(o => o.proveedor === ganador);
+    let ts = Date.now();
+    if (r[11] instanceof Date) ts = r[11].getTime();
+    else if (r[11]) { const fch = new Date(r[11]); if (!isNaN(fch)) ts = fch.getTime(); }
+    return {
+      id: id, rq: String(r[1]||""), ocNum: String(r[2]||""), descripcion: String(r[3]||""),
+      moneda: String(r[5]||"PEN"), incIgv: true, estado: String(r[10]||"Pendiente"),
+      ts: ts, notas: String(r[12]||""), ofertas: ofertas,
+      ofertaSeleccionadaId: sel ? sel.id : null, historial: []
+    };
+  });
 }
 
 function desglose(total, incIgv) {
@@ -1166,8 +1239,9 @@ function ok(msg) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function doGet() {
-  return ok("Cotizador Pro API v3 activa");
+function okData(data) {
+  return ContentService.createTextOutput(JSON.stringify({ok:true,data:data}))
+    .setMimeType(ContentService.MimeType.JSON);
 }`;
 
 let provs = [], cots = [], mats = [];
@@ -1237,11 +1311,19 @@ function normProv(list){
 /* ============================================================ STORAGE ============================================================ */
 function cargar(){
   try{
-    provs = normProv(JSON.parse(localStorage.getItem(SK.p)) || DEFAULT_PROV);
-    cots  = normCots(JSON.parse(localStorage.getItem(SK.c)) || []);
-    mats  = JSON.parse(localStorage.getItem(SK.m)) || DEFAULT_MATS.map(m=>({id:uid(),...m,descripcion:"",ts:Date.now()}));
+    const pRaw=localStorage.getItem(SK.p), cRaw=localStorage.getItem(SK.c), mRaw=localStorage.getItem(SK.m);
+    provs = normProv(pRaw ? JSON.parse(pRaw) : []);
+    cots  = normCots(cRaw ? JSON.parse(cRaw) : []);
+    mats  = mRaw ? JSON.parse(mRaw) : [];
     sheetsUrl = localStorage.getItem(SK.sheetsUrl) || "https://script.google.com/macros/s/AKfycbwMOxyopspo-bLg2iuYQvNorFgpxxw7lTmUN9l1IP4sd6_9MZfP5i6DVcdvJOr6kBU/exec";
-  }catch{ provs=normProv(DEFAULT_PROV); cots=[]; mats=[]; }
+  }catch{ provs=[]; cots=[]; mats=[]; }
+}
+// Datos de ejemplo: solo se usan si no hay nada local ni en Google Sheets
+function aplicarDatosDemo(){
+  provs = normProv(DEFAULT_PROV);
+  mats  = DEFAULT_MATS.map(m=>({id:uid(),...m,descripcion:"",ts:Date.now()}));
+  localStorage.setItem(SK.p, JSON.stringify(provs));
+  localStorage.setItem(SK.m, JSON.stringify(mats));
 }
 function guardar(){
   localStorage.setItem(SK.p, JSON.stringify(provs));
@@ -1677,6 +1759,58 @@ async function syncSheetsSilent(){
       body:JSON.stringify(buildSheetsPayload())
     });
   } catch(e) { /* silencioso */ }
+}
+
+// Trae proveedores, materiales y cotizaciones desde la hoja de Google Sheets (requiere Apps Script v4+)
+async function cargarDesdeSheets(silent){
+  if(!sheetsUrl){ if(!silent) toast("Primero configura y guarda la URL de tu Web App.","err"); return false; }
+  try{
+    const sep=sheetsUrl.includes("?")?"&":"?";
+    const res=await fetch(sheetsUrl+sep+"action=data");
+    const json=await res.json();
+    if(!json.ok || !json.data) throw new Error(json.msg||"Respuesta inválida del script.");
+    const d=json.data;
+    let cambios=false;
+    if(Array.isArray(d.proveedores) && d.proveedores.length){ provs=normProv(d.proveedores); cambios=true; }
+    if(Array.isArray(d.materiales) && d.materiales.length){ mats=d.materiales.map(m=>({id:uid(),...m})); cambios=true; }
+    if(Array.isArray(d.cotizaciones) && d.cotizaciones.length){ cots=normCots(d.cotizaciones); cambios=true; }
+    if(cambios){
+      localStorage.setItem(SK.p, JSON.stringify(provs));
+      localStorage.setItem(SK.c, JSON.stringify(cots));
+      localStorage.setItem(SK.m, JSON.stringify(mats));
+      metaUpdate(); renderAll();
+      if(!silent) toast("Datos cargados desde Google Sheets.","sheets");
+    } else if(!silent){
+      toast("Tu hoja de cálculo aún no tiene datos para importar.","");
+    }
+    return cambios;
+  }catch(e){
+    if(!silent) toast("No se pudo cargar desde Sheets: "+e.message,"err");
+    return false;
+  }
+}
+
+async function importarDesdeSheets(){
+  const url=document.getElementById("sheetsUrl").value.trim();
+  if(!url) return toast("Primero ingresa la URL de tu Web App.","err");
+  sheetsUrl=url;
+  localStorage.setItem(SK.sheetsUrl, url);
+  confirmar("Cargar desde Google Sheets",
+    "Esto reemplazará los proveedores, materiales y cotizaciones locales con los datos de tu hoja de cálculo. ¿Continuar?",
+    async ()=>{
+      const statusEl=document.getElementById("sheetsStatus");
+      statusEl.style.display="flex"; statusEl.textContent="⏳ Cargando datos desde Google Sheets...";
+      const ok=await cargarDesdeSheets(false);
+      if(ok){
+        statusEl.textContent="✓ Datos importados desde Google Sheets.";
+        statusEl.style.background="var(--green-50)";
+        statusEl.style.color="var(--green-700)";
+      } else {
+        statusEl.textContent="✕ No se encontraron datos en tu hoja (o hubo un error). Verifica la URL y que el script esté en la versión v4.";
+        statusEl.style.background="var(--red-50)";
+        statusEl.style.color="var(--red-600)";
+      }
+    });
 }
 
 ["mCot","mProv","mSheets","mMat","mSeg","mPin"].forEach(id=>{
@@ -2415,6 +2549,16 @@ function dl(content,name,type){ const a=document.createElement("a"); a.href=URL.
 
 /* ============================================================ INIT ============================================================ */
 initTheme(); cargar(); renderAll(); metaUpdate();
+
+// Al iniciar, intenta traer la data real desde Google Sheets (silencioso).
+// Si no hay nada local ni en la hoja, recién se usan los datos de ejemplo.
+(async function initSync(){
+  const pulled = sheetsUrl ? await cargarDesdeSheets(true) : false;
+  if(!pulled && !provs.length && !cots.length && !mats.length){
+    aplicarDatosDemo();
+    renderAll(); metaUpdate();
+  }
+})();
 
 // PWA: instalable y funcional sin conexión
 if("serviceWorker" in navigator){
