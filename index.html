@@ -858,14 +858,26 @@ table.dt td strong{color:var(--text-1);font-weight:600}
     <div class="m-head"><div class="m-title">🔐 Seguridad y aprobador</div><button class="m-close" onclick="cerrarSeg()">✕</button></div>
     <div class="m-body">
       <div class="fgrid" style="gap:13px">
-        <div class="fg"><label class="fl">Nombre del aprobador (jefe)</label><input id="segNombre" class="fi" placeholder="Ej. Juan Pérez — Jefe de Mantenimiento" autocomplete="off"></div>
-        <div class="fg"><label class="fl">PIN de aprobación (4-6 dígitos)</label><input id="segPin" class="fi" type="password" inputmode="numeric" maxlength="6" placeholder="Déjalo vacío para no usar PIN" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Nombre del aprobador (jefe)</label><input id="segNombre" class="fi" placeholder="Ej. Juan Pérez" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Área / Cargo</label>
+          <select id="segArea" class="fi">
+            <option value="">— Selecciona el área —</option>
+            <option value="GERENTE MANTENIMIENTO">👔 GERENTE MANTENIMIENTO</option>
+            <option value="LOGÍSTICA">📦 LOGÍSTICA</option>
+            <option value="ASISTENTE">🗂️ ASISTENTE</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">PIN de aprobación (4-6 dígitos)</label>
+          <input id="segPin" class="fi" type="password" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="new-password">
+          <div class="fh" id="segPinHint" style="display:none">🔒 Ya hay un PIN configurado. Escribe uno nuevo para cambiarlo o deja el campo vacío para mantenerlo.</div>
+        </div>
         <div style="font-size:11.5px;color:var(--text-3);line-height:1.6;background:var(--surface-2);border-radius:var(--r-md);padding:10px 12px">
-          💡 Si configuras un PIN, se pedirá cada vez que se apruebe o rechace una cotización. El nombre aparecerá en el historial y en la orden de compra.
+          💡 Si configuras un PIN, se pedirá cada vez que se apruebe o rechace una cotización. El nombre y el área quedarán registrados en el historial y en la orden de compra.
         </div>
       </div>
     </div>
     <div class="m-foot">
+      <button class="btn btn-ghost" id="segQuitarPin" style="display:none;color:var(--red-500);margin-right:auto" onclick="quitarPin()">🗑 Quitar PIN</button>
       <button class="btn btn-ghost" onclick="cerrarSeg()">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarSeg()">Guardar configuración</button>
     </div>
@@ -1928,7 +1940,7 @@ function eliminarProv(id){
 }
 
 /* ============================================================ COTIZACIONES ============================================================ */
-function histEntry(accion){ return {accion,fecha:Date.now(),por:localStorage.getItem("aprobadorNombre")||"Usuario"}; }
+function histEntry(accion){ return {accion,fecha:Date.now(),por:localStorage.getItem("aprobadorNombre")||"Usuario",area:localStorage.getItem("aprobadorArea")||""}; }
 function guardarCot(){
   const rq=document.getElementById("rq").value.trim();
   const d=document.getElementById("desc").value.trim();
@@ -1955,17 +1967,40 @@ function guardarCot(){
 let pinCb=null;
 function abrirSeguridad(){
   document.getElementById("segNombre").value=localStorage.getItem("aprobadorNombre")||"";
-  document.getElementById("segPin").value=localStorage.getItem("aprobadorPin")||"";
+  document.getElementById("segArea").value=localStorage.getItem("aprobadorArea")||"";
+  // Por seguridad el PIN nunca se muestra; vacío = mantener el actual
+  document.getElementById("segPin").value="";
+  const hayPin=!!localStorage.getItem("aprobadorPin");
+  document.getElementById("segPinHint").style.display=hayPin?"block":"none";
+  document.getElementById("segQuitarPin").style.display=hayPin?"inline-flex":"none";
   document.getElementById("mSeg").classList.remove("hidden");
 }
-function cerrarSeg(){ document.getElementById("mSeg").classList.add("hidden"); }
+function cerrarSeg(){ document.getElementById("mSeg").classList.add("hidden"); limpiarSeg(); }
+function limpiarSeg(){
+  document.getElementById("segNombre").value="";
+  document.getElementById("segArea").value="";
+  document.getElementById("segPin").value="";
+}
 function guardarSeg(){
   const nombre=document.getElementById("segNombre").value.trim();
+  const area=document.getElementById("segArea").value;
   const pin=document.getElementById("segPin").value.trim();
+  if(!nombre) return toast("Ingresa el nombre del aprobador.","err");
+  if(!area) return toast("Selecciona el área o cargo.","err");
   if(pin&&(pin.length<4||!/^\d+$/.test(pin))) return toast("El PIN debe tener 4-6 dígitos numéricos.","err");
   localStorage.setItem("aprobadorNombre",nombre);
-  if(pin) localStorage.setItem("aprobadorPin",pin); else localStorage.removeItem("aprobadorPin");
-  cerrarSeg(); toast("Configuración de seguridad guardada.","ok");
+  localStorage.setItem("aprobadorArea",area);
+  if(pin) localStorage.setItem("aprobadorPin",pin); // vacío = conservar el PIN existente
+  cerrarSeg();
+  toast(`Aprobador guardado: ${nombre} (${area}).`,"ok");
+}
+function quitarPin(){
+  confirmar("¿Quitar el PIN?","Las aprobaciones y rechazos dejarán de pedir PIN de seguridad.",()=>{
+    localStorage.removeItem("aprobadorPin");
+    document.getElementById("segPinHint").style.display="none";
+    document.getElementById("segQuitarPin").style.display="none";
+    toast("PIN eliminado.","ok");
+  });
 }
 function conPin(accion,cb){
   const pin=localStorage.getItem("aprobadorPin");
@@ -1979,10 +2014,11 @@ function conPin(accion,cb){
 function verificarPin(){
   const ok=document.getElementById("pinInput").value===localStorage.getItem("aprobadorPin");
   if(!ok){ document.getElementById("pinInput").value=""; return toast("PIN incorrecto.","err"); }
+  document.getElementById("pinInput").value="";
   document.getElementById("mPin").classList.add("hidden");
   const cb=pinCb; pinCb=null; cb?.();
 }
-function cancelarPin(){ document.getElementById("mPin").classList.add("hidden"); pinCb=null; }
+function cancelarPin(){ document.getElementById("mPin").classList.add("hidden"); document.getElementById("pinInput").value=""; pinCb=null; }
 
 function aprobarOferta(cotId,ofId){
   const c=cots.find(x=>x.id===cotId); if(!c) return;
@@ -2148,7 +2184,7 @@ function renderTendencias(){
       <div style="font-size:14px;width:24px;text-align:center">${iconAcc(h.accion)}</div>
       <div class="act-body">
         <div class="act-title" style="font-size:12px">${esc(h.accion)}</div>
-        <div class="act-meta">${esc(h.rq)} · ${esc(h.desc)} · ${esc(h.por)}</div>
+        <div class="act-meta">${esc(h.rq)} · ${esc(h.desc)} · 👤 ${esc(h.por)}${h.area?` — ${esc(h.area)}`:""}</div>
       </div>
       <div style="font-size:10.5px;color:var(--text-3);white-space:nowrap">${new Date(h.fecha).toLocaleDateString("es-PE",{day:"2-digit",month:"short"})} ${new Date(h.fecha).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</div>
     </div>`).join(""):`<div style="text-align:center;padding:16px;font-size:12px;color:var(--text-3)">Los movimientos aparecerán aquí.</div>`;
@@ -2304,7 +2340,7 @@ function renderAppr(){
           </div>
         </div>
         ${sel&&dgSel?`<div class="appr-winner-badge">🏆 ${esc(sel.proveedor)} · ${fmt(dgSel.final,m)} inc. IGV · ${sel.cantidad} und × ${fmt(sel.precio,m)}</div>`:""}
-        ${apEntry?`<div class="appr-meta-v2" style="margin-top:6px">✍️ ${esc(apEntry.por)} · ${new Date(apEntry.fecha).toLocaleString("es-PE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:""}
+        ${apEntry?`<div class="appr-meta-v2" style="margin-top:6px">✍️ ${esc(apEntry.por)}${apEntry.area?` — ${esc(apEntry.area)}`:""} · ${new Date(apEntry.fecha).toLocaleString("es-PE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:""}
         ${losersHtml}
       </div>`;
     }).join("");
@@ -2371,8 +2407,9 @@ function generarOC(id){
   const dg=igvDesglose(sel.total,c.incIgv);
   const m=cotMon(c);
   const mat=mats.find(x=>x.nombre.toLowerCase()===c.descripcion.toLowerCase());
-  const aprobador=localStorage.getItem("aprobadorNombre")||"_______________";
   const apEntry=(c.historial||[]).find(h=>h.accion.startsWith("Aprobado"));
+  const aprobador=apEntry?.por||localStorage.getItem("aprobadorNombre")||"_______________";
+  const aprobadorArea=apEntry?.area||localStorage.getItem("aprobadorArea")||"Jefatura";
   const w=window.open("","_blank");
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${c.ocNum||"Orden de Compra"} — ${esc(c.rq)}</title>
 <style>
@@ -2440,7 +2477,7 @@ function generarOC(id){
   <tr class="tot-row tot-final"><td>TOTAL:</td><td style="text-align:right">${fmt(dg.final,m)}</td></tr>
 </table>
 <div class="firmas">
-  <div class="firma"><strong>${esc(aprobador)}</strong><br>Aprobado por — Jefatura</div>
+  <div class="firma"><strong>${esc(aprobador)}</strong><br>Aprobado por — ${esc(aprobadorArea)}</div>
   <div class="firma"><strong>${esc(sel.proveedor)}</strong><br>Conformidad del proveedor</div>
 </div>
 <div class="meta">Documento generado por Cotizador Pro · ${new Date().toLocaleString("es-PE")} · Usa Ctrl+P para guardar como PDF</div>
